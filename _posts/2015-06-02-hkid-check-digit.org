@@ -1,0 +1,225 @@
+#+COMMENT: -*- mode: org; mode:flyspell -*-
+
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+OPTIONS: email:t f:t inline:t num:nil p:nil pri:nil prop:nil
+#+OPTIONS: stat:t tags:t tasks:t tex:t timestamp:nil title:t toc:nil
+#+OPTIONS: todo:t |:t
+#+OPTIONS: html-postamble:nil
+#+JEKYLL_TAGS: hkid checkdigit
+#+JEKYLL_CATEGORIES: Competition
+
+#+TITLE: HKID Check Digit
+#+SUBTITLE: Presented at Hong Kong Functional Programming User Group Meetup
+#+DATE: <2015-06-02 Tue>
+#+AUTHOR: Nick Psaris
+#+EMAIL: nick@vector-sigma.com
+
+
+* Why Q?
+
+- Performance
+- Expressiveness
+- Fun-ctional
+
+* HKID
+
+#+begin_quote
+Convert English letters to number, using the mapping A->10, B->11,
+C->12 .... Z->35
+#+end_quote
+
+- character vectors
+  #+begin_src q
+  q)"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  #+end_src
+
+- .q.k
+  #+begin_src q
+  q).Q.n
+  "0123456789"
+  q).Q.A
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  q).Q.nA
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  q).Q.na
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+  q).Q.b6
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  #+end_src
+
+
+- character to integer
+  #+begin_src q
+  q)-55+"j"$"AZ123456"
+  10 35 -6 -5 -4 -3 -2 -1
+  #+end_src
+
+- find
+
+  #+begin_src q
+  q).Q.nA?"AZ123456"
+  10 35 1 2 3 4 5 6
+  #+end_src
+
+* The Sum
+
+- Calculate the check sum
+  + For HKID with 2 English letters
+  #+begin_example
+  check sum = char[0] * 9 + char[1] * 8 + char[2] * 7 + char[3] * 6 + char[4] * 5 + char[5] * 4 + char[6] * 3 + char[7] * 2
+  #+end_example
+  + For HKID with only 1 English letter
+  #+begin_example
+  check sum = 36 * 9 + char[1] * 8 + char[2] * 7 + char[3] * 6 + char[4] * 5 + char[5] * 4 + char[6] * 3 + char[7] * 2
+  #+end_example
+
+- what is 36?
+  #+begin_src q
+  q)-55+"j"$"[Z123456"
+  36 35 -6 -5 -4 -3 -2 -1
+  #+end_src
+
+- one past the end
+  #+begin_src q
+  q).Q.nA?" Z123456"
+  36 35 1 2 3 4 5 6
+  #+end_src
+
+- reshaping lists
+  #+begin_src q
+  q)-8#"[","AZ123456"
+  "AZ123456"
+  q)-8#"[","Z123456"
+  "[Z123456"
+  #+end_src
+
+
+- padding strings
+  #+begin_src q
+  q)-8$"Z123456"
+  " Z123456"
+  q)-8$"AZ123456"
+  "AZ123456"
+  #+end_src
+
+- vector arithmetic
+  #+begin_src q
+  q)9 8 7 6 5 4 3 2 * .Q.nA?-8$" Z123456"
+  324 280 7 12 15 16 15 12
+  q)sum 9 8 7 6 5 4 3 2 * .Q.nA?-8$" Z123456"
+  681
+  #+end_src
+
+- dot product
+  #+begin_src q
+  q)9 8 7 6 5 4 3 2f $ "f"$.Q.nA?-8$" Z123456"
+  681f
+  #+end_src
+
+* The Checksum
+
+
+- *mooderate* check sum by 11 and use 11 to minus the value
+-  check digit = 11 - checksum mod 11
+
+- modulus
+  #+begin_src q
+  q)11 - mod[;11] sum 9 8 7 6 5 4 3 2*.Q.nA?-8$" Z123456"
+  1
+  q).Q.nA 11 - mod[;11] sum 9 8 7 6 5 4 3 2*.Q.nA?-8$" Z123456"
+  "1"
+  #+end_src
+
+
+- reorder operations
+  #+begin_src q
+  q).Q.nA mod[;11] sum 2 3 4 5 6 7 8 9*.Q.nA?-8$" Z123456"
+  "1"
+  #+end_src
+
+
+- lookup table
+  #+begin_src q
+  q)sum 2 3 4 5 6 7 8 9*.Q.nA?-8$" Z999999"
+  528
+  q)(529#.Q.n,"A")sum 2 3 4 5 6 7 8 9*.Q.nA?-8$" Z123456"
+  "1"
+  #+end_src
+
+* Solutions
+
+- the shortest (composition)
+  #+begin_src q
+  q)hkidcheck:(529#.Q.n,"A")sum 2 3 4 5 6 7 8 9*.Q.nA?-8$
+  q)\ts:100000 hkidcheck each ids
+  1487 640
+  #+end_src
+
+- the fastest (projection)
+  #+begin_src q
+  q)hkidcheck:{x sum 2 3 4 5 6 7 8 9*y?-8$z}[529#.Q.n,"A";.Q.nA]
+  q)\ts:100000 hkidcheck each ids
+  1335 672
+  #+end_src
+
+- the longest
+  #+begin_src q
+  hkidcheck:{[id]
+      $[(count id)=8;[abc1:"i"$id[0];abc1:abc1-55;abc2:"i"$id[1];abc2:abc2-55;adigit1:"i"$id[2];adigit2:"i"$id[3];adigit3:"i"$id[4];adigit4:"i"$id[5];adigit5:"i"$id[6];adigit6:"i"$id[7];p1:(abc1*9)];[abc1:324;p1:abc1;abc2:"i"$id[0];abc2-:55;adigit1:"i"$id[1];adigit2:"i"$id[2];adigit3:"i"$id[3];adigit4:"i"$id[4];adigit5:"i"$id[5];adigit6:"i"$id[6]]];
+      p2:abc2*8;
+      p3:(adigit1-48)*7;
+      p4:(adigit2-48)*6;
+      p5:(adigit3-48)*5;
+      p6:(adigit4-48)*4;
+      p7:(adigit5-48)*3;
+      p8:(adigit6-48)*2;
+      s1:p1+p2;
+      s2:p3+p4;
+      s3:p5+p6;
+      s4:p7+p8;
+      s5:s1+s2;
+      s6:s3+s4;
+      sumtotal:s5+s6;
+      remainder:(sumtotal mod 11);
+      checksum:(11-remainder);
+      checksum }
+  #+end_src
+
+- the winner
+  #+begin_src q
+  q)hkidcheck:eval parse"{\"",((2231#"B"),1000#"0", .Q.nA 10-til 10),"\" sum (9 8 7 6 5 4 3 2i)*6h$ $[7=count x; \"[\",x; x]}"
+  q)\ts:100000 hkidcheck each ids
+  1350 512
+  #+end_src
+
+* SEDOL
+
+#+begin_quote
+The check digit for a SEDOL is chosen to make the total weighted sum
+of all seven characters a multiple of 10. The check digit is computed
+using a weighted sum of the first six characters. Letters have the
+value of 9 plus their alphabet position, such that B = 11 and Z
+= 35. While vowels are never used in SEDOLs, they are not ignored when
+computing this weighted sum (e.g. H = 17 and J = 19, even though I is
+not used), simplifying code to compute this sum. The resulting string
+of numbers is then multiplied by the weighting factor as follows:
+
+#+begin_example
+First   1
+Second  3
+Third   1
+Fourth  7
+Fifth   3
+Sixth   9
+Seventh 1 (the check digit)
+#+end_example
+
+-- [[https://en.wikipedia.org/wiki/SEDOL#Description][Wikipedia Sedol Page]]
+#+end_quote
+
+* Insights
+
+- A HKID is a *vector* of characters
+- The modulus operator is slow (but cyclical)
+- Fixed values can be pre-calculate

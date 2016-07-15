@@ -1,0 +1,351 @@
+---
+title: "Building Histograms"
+excerpt: "Presented at Kx Hong Kong User Group Meeting"
+date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2013-08-15 Thu&gt;</span></span>
+categories: 
+- Presentation
+tags: 
+- ascii 
+- histogram
+---
+
+
+# Goals
+
+-   Write in a functional style
+-   Use higher order functions
+-   Include math, stats, and finance
+-   Have fun
+
+
+# Overview
+
+-   Histograms
+-   Factoring the Algorithm
+-   Histogram Implementations
+-   Sample Plots
+-   Complex Use Cases
+-   Further Reading
+
+
+# Histograms
+
+-   Graphical presentation of a data set's distribution
+-   More descriptive than summary statistics
+-   Chart granularity critically depends on the number of bins
+
+There have been many attempts over the past 80 years to compute the
+optimal number of bins given a specific dataset. There are also many
+different ways to plot the histogram data.  If we factor the code
+properly, we can compose a custom histogram function with exactly the
+properties we want.
+
+```q
+myhist:hist[sturges;chart[bar"*";30]]
+```
+
+
+## Uniform Distribution
+
+```q
+q)myhist 100?1f
+0    | 11 "***********                   "
+0.125| 12 "************                  "
+0.25 | 12 "************                  "
+0.375| 18 "******************            "
+0.5  | 9  "*********                     "
+0.625| 13 "*************                 "
+0.75 | 12 "************                  "
+0.875| 13 "*************                 "
+1    | 0  "                              "
+```
+
+
+## Box-Muller Transform
+
+```q
+pi:acos -1
+bm:{
+ if[count[x] mod 2;'`length];
+ x:2 0N#x;
+ r:sqrt -2*log x 0;
+ x:raze r*(cos;sin)@\:2*pi*x 1;
+ x}
+```
+
+
+## Normal Distribution
+
+```q
+q)myhist bm 100?1f
+-3   | 0  "                              "
+-2.25| 2  "**                            "
+-1.5 | 17 "*****************             "
+-0.75| 29 "***************************** "
+0    | 27 "***************************   "
+0.75 | 20 "********************          "
+1.5  | 4  "****                          "
+2.25 | 1  "*                             "
+3    | 0  "                              "
+```
+
+
+# Factoring the Algorithm
+
+-   Histogram Generator
+    
+    ```q
+    nrng:{[n;s;e]s+til[1+n]*(e-s)%n}
+    nbins:{[n;x]
+     f:10 xexp floor 10 xlog abs (e:max x)-s:min x;
+     b:f*nrng[n;floor s%f;ceiling e%f];
+     b}
+    hist:{[bf;pf;x]
+     b:nbins[bf x] x;
+     g:group b bin x;
+     g:b!x g til count b;
+     h:pf g;
+     h}
+    ```
+
+-   nrng - generates range of <del>n</del> numbers between <del>s</del> and <del>e</del>
+-   nbins - generates bins rounded to appropriate order of magnitude
+-   hist - calls bin function, groups bins, and calls plotting function
+
+
+# Histogram Implementations
+
+-   Simple Bin and Plot Algorithms
+    
+    ```q
+    stem:{$[n>4;1;n>2;2;5]*n:count distinct floor x}
+    leaf:{k!(`#asc@) each floor 10*value[x]-k:floor 1e-8+key x}
+    ```
+
+-   `stem` - generates bins (ensuring a minimum of 5) using the ones place
+-   `leaf` - plots bins by sorting the tenths place
+
+-   Stem and Leaf Plot
+
+```q
+q)hist[stem;leaf] bm 100?1f
+-3| 1 6 9
+-2| 0 1 1 3 6 6 7 7 7 7 8 9 9 9 9
+-1| 0 0 0 1 1 2 2 2 2 2 3 3 3 4 5 5 5 5 6 6 6 6 7 7 7 7 8 8 8 9 9 9 9
+0 | 0 0 1 1 1 1 2 2 2 3 3 3 3 3 4 4 4 4 5 5 5 5 5 6 6 6 7 7 7 7 8 8 8 9
+1 | 0 0 0 0 0 1 1 3 4 4 6 7 8 8
+2 | ,2
+3 | `long$()
+```
+
+-   Data-oriented Binning Algorithms
+
+```q
+pctile:{[p;x]x iasc[x]"j"$p*-1+count x}
+iqr:{(-) . pctile[.75 .25;x]}
+skew:{avg[x*x2]%sqrt m2*m2*m2:avg x2:x*x-:avg x}
+sg1:{[n]sqrt 6f*(n-2)%(n+1)*n+3}
+nw:{[w;x]ceiling (max[x]-min x)%w}
+
+sqrtn:{ceiling sqrt count x}
+sturges:{ceiling 1+2 xlog count x}
+doane:{ceiling 1+(2 xlog n)+2 xlog 1+abs skew[x]%sg1 n:count x}
+scott:{nw[;x] 3.4908*dev[x]*count[x] xexp -1%3}
+/freedmandiaconis
+fd:{nw[;x] 2*iqr[x]*count[x] xexp -1%3}
+```
+
+-   `sqrtn` - simplest algorithm (used by Excel)
+-   `sturges` - (1926) assumes data is a normally distributed
+-   `doane` - (1976) modified `sturges` for skewed data - `skew`
+-   `scott` - (1979) mathematically rigorous because it uses `stdev`
+-   `fd` - (1981) modified `scott` for skewed data - `iqr`
+
+-   Plotting Algorithms
+
+```q
+chart:{[f;w;h]
+ h:count each h;
+ n:value "i"$(m&w)*h%m:max h;
+ p:f[w] each n;
+ h:h,'enlist each p;
+ h}
+bar:{[c;w;n](n#c),(w-n)#" "}
+dot:{[c;w;n]$[n;((n-1)#" "),c;""],(w-n)#" "}
+```
+
+-   `chart` - generates a line of text for each bin
+-   `bar` - generates a line of characters
+-   `dot` - generates a single character
+
+
+# Sample Plots
+
+-   Basic Strurges Bar Chart
+
+```q
+q)hist[sturges;chart[bar"*";30]] x:exp bm 100?1f
+0   | 52 "******************************"
+1.25| 22 "*************                 "
+2.5 | 14 "********                      "
+3.75| 6  "***                           "
+5   | 2  "*                             "
+6.25| 1  "*                             "
+7.5 | 1  "*                             "
+8.75| 2  "*                             "
+10  | 0  "                              "
+```
+
+-   Robust Freedman-Diaconis Dot Chart
+
+```q
+q)hist[fd;chart[bar"*";30]] x
+0        | 32 "******************************"
+0.8333333| 30 "****************************  "
+1.666667 | 12 "***********                   "
+2.5      | 8  "********                      "
+3.333333 | 10 "*********                     "
+4.166667 | 2  "**                            "
+5        | 2  "**                            "
+5.833333 | 0  "                              "
+6.666667 | 1  "*                             "
+7.5      | 0  "                              "
+8.333333 | 2  "**                            "
+9.166667 | 1  "*                             "
+10       | 0  "                              "
+```
+
+-   Scott Dot Chart with "@"
+
+```q
+q)hist[fd;chart[dot"@";30]] x
+0        | 32 "                             @"
+0.8333333| 30 "                           @  "
+1.666667 | 12 "          @                   "
+2.5      | 8  "       @                      "
+3.333333 | 10 "        @                     "
+4.166667 | 2  " @                            "
+5        | 2  " @                            "
+5.833333 | 0  "                              "
+6.666667 | 1  "@                             "
+7.5      | 0  "                              "
+8.333333 | 2  " @                            "
+9.166667 | 1  "@                             "
+10       | 0  "                              "
+```
+
+
+# Complex Use Cases
+
+-   Geometric Brownian Motion
+
+```q
+gbm:{[s;r;t;z]exp (t*r-.5*s*s)+s*z*sqrt t}
+```
+
+-   Log Normal Distribution
+
+```q
+q)n:1000;S:100;s:.3;r:.01;t:1;nt:10
+q)z:bm n cut (n*nt)?1f
+q)myhist S*prd gbm[s;r;t%nt] z
+0    | 0   "                              "
+36.36| 192 "*************                 "
+72.73| 443 "******************************"
+109.1| 268 "******************            "
+145.5| 75  "*****                         "
+181.8| 13  "*                             "
+218.2| 5   "                              "
+254.5| 3   "                              "
+290.9| 1   "                              "
+327.3| 0   "                              "
+363.6| 0   "                              "
+400  | 0   "                              "
+```
+
+-   Monte Carlo Option Pricing
+
+```q
+eumc:{[S;k;r;t;nt;c;z]
+ f:S*prd gbm[s;r;t%nt] z;
+ v:exp[neg r*t]*0|(f-k)*-1 1 c;
+ v}
+mcstat:{`est`ci!(sum[x]%n;1.96*dev[x]%sqrt n:count x)}
+
+q)k:80;n:10000
+q)z:neg[z],'z:bm n cut (n*nt)?1f
+q)mc:`c`p!eumc[S;k;r;t;nt;;z] each 10b
+q)mcstat each mc
+ | est   ci
+-| -------------
+c| 24.01 0.3732
+p| 3.262 0.09971
+```
+
+-   Call Payoff Distribution
+
+```q
+q)myhist mc`c
+0    | 10612 "******************************"
+18.75| 4323  "************                  "
+37.5 | 2665  "********                      "
+56.25| 1344  "****                          "
+75   | 606   "**                            "
+93.75| 241   "*                             "
+112.5| 124   "                              "
+131.3| 44    "                              "
+150  | 22    "                              "
+168.8| 12    "                              "
+187.5| 1     "                              "
+206.3| 3     "                              "
+225  | 1     "                              "
+243.8| 2     "                              "
+262.5| 0     "                              "
+281.3| 0     "                              "
+300  | 0     "                              "
+```
+
+-   Put Payoff Distribution
+
+```q
+q)myhist mc`p
+0    | 15739 "******************************"
+3.75 | 943   "**                            "
+7.5  | 832   "**                            "
+11.25| 689   "*                             "
+15   | 591   "*                             "
+18.75| 429   "*                             "
+22.5 | 318   "*                             "
+26.25| 189   "                              "
+30   | 133   "                              "
+33.75| 76    "                              "
+37.5 | 37    "                              "
+41.25| 17    "                              "
+45   | 3     "                              "
+48.75| 4     "                              "
+52.5 | 0     "                              "
+56.25| 0     "                              "
+60   | 0     "                              "
+```
+
+
+# Further Reading
+
+-   Hyndman, R.J. (1995) The problem with Sturges’ rule for constructing
+    histograms, Technical report, Monash University.
+
+-   Wand, M.P. (1995) Data-based choice of histogram
+    bin-width. Technical report, Australian Graduate School of
+    Management, University of NSW.
+
+Hyndman dissects each of the binning functions and explains the
+deficiencies of each.
+
+Wand proposes what seems like the 'grand unified theory' of optimal
+histogram bin-width computation.  The algorithm is much more complex
+than what we've encountered so far (includes the use `fft`), but
+matches Scott's rule under first order approximations.
+
+
+<!----- Footnotes ----->
+

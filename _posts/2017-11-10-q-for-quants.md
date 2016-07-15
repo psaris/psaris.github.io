@@ -1,0 +1,813 @@
+---
+title: "Q for Quants"
+excerpt: "Presented at Carnegie Mellon's MSCF Speaker Series"
+date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-11-10 Fri&gt;</span></span>
+categories: 
+- Presentation
+tags: 
+- quant 
+- cme 
+- taq
+---
+
+
+# Is Q for Quants?
+
+-   A Quant vs. Quant trading
+-   Pricing vs. Backtesting
+-   Compiled vs. Interpreted
+-   Specialist vs. Generalist
+
+
+# Where is Q?
+
+KDB+ is fast and flexible time series database/CEP engine
+
+-   Order book recordings
+-   Order/Execution recordings
+-   Surveillance engines
+-   Hedge fund historical databases
+-   Bitcoin Mercantile Exchange
+
+
+# History of Q
+
+-   APL -> A -> A+
+
+```apl
+life←{                                   ⍝ John Conway's "Game of Life".
+    ↑1 ⍵∨.∧3 4=+/,¯1 0 1∘.⊖¯1 0 1∘.⌽⊂⍵  ⍝ Expression for next generation.
+}
+```
+
+-   J -> K -> K-SQL -> Q (KDB+)
+
+```q
+life:{3=a-x*4=a:2 sum/2(1 0 -1 rotate'\:)/x}
+```
+
+-   kdb+tic
+-   kdb+taq
+-   FD vs KX
+-   FD + KX
+
+
+# Why is Q popular?
+
+-   KDB+ is one of the fastest (if not the fastest) columnar database.
+-   Computations are vectorized - thus reducing the interpreter overhead.
+-   The functional paradigm of separating data and algorithms allows
+    parallel execution.
+-   There are distinct types for dates, times and datetimes, GUID
+-   Databases are just directories, tables are sub-directories, columns
+    are files.
+-   Even integer and temporal types have null and infinite values.
+    
+    > 知之为知之，不知为不知，是知也 &#x2013; 孔子
+    
+    > To know what you know and what you do not know, that is true
+    > knowledge &#x2013; Confucius
+    
+    > To know that we know what we know, and to know that we do not know
+    > what we do not know, that is true knowledge &#x2013; Nicolaus Copernicus
+
+
+# My Experience with Q
+
+-   Java -> Q backtest -> Q trading (2006-2009)
+-   Q automated market making engine (2009-2012)
+-   Q Tips (2012-2015)
+-   Q CRB platform (2015-present)
+
+
+# Learning Outcomes
+
+-   Students will be able to load CSV/fixed-width datasets into Q
+-   Students will be able to list/differentiate each Q datatype
+-   Students will know the four Q attributes and explain when to use each
+-   Students will be able to perform simple q-SQL queries with aggregation
+-   Students will be able to save datasets to disk
+
+In summary, given a large dataset, students will be able to load,
+join, analyze and report their results.
+
+I've found the best way to learn a new computer language is to learn
+by example.  Please download the code and follow along.
+
+
+# Sample Financial Data
+
+CME Datamine provides samples of their datasets
+
+-   Click on "Access CME DataMine"
+-   Click on "Find Time & Sales"
+-   Click on "Sample Files"
+
+
+# Installing Q
+
+-   [Download KDB+](https://kx.com/download/)
+-   [Install KDB+](http://code.kx.com/q/tutorials/install/)
+-   [Download Q4Q](https://github.com/psaris/q4q/)
+-   [7-zip](http://www.7-zip.org/) [^fn1]
+-   [Q Insight Pad](http://www.qinsightpad.com/) [^fn2]
+-   [Q Studio](http://www.timestored.com/qstudio/) [^fn2]
+-   [Emacs Q-Mode](https://github.com/psaris/q-mode/)
+-   [Vim Q Plugin](https://github.com/simongarland/vim/)
+
+
+# Running Q
+
+After downloading q and following the installation instructions:
+
+-   mac
+    
+    ```sh
+    export QHOME=~/Downloads/q
+    cd  ~/Downloads/q4q-master
+    rlwrap ~/Downloads/q/m32/q bbo.q
+    ```
+    
+    rlwrap should be installed to enable command recall
+
+-   windows
+    
+    ```sh
+    setx QHOME "C:\q"
+    cd %USERPROFILE%\AppData\Local\Temp\q4q-master\q4q-master
+    C:\q\w32\q bbo.q
+    ```
+    
+    downloading and unzipping on windows seems to repeat the last directory
+
+
+# What is Q?
+
+-   Q reads right to left
+    
+    ```q
+    q)prd 0N!1+x:til 10
+    0 1 2 3 4 5 6 7 8 9
+    3628800
+    ```
+
+-   variables can be assigned inline
+-   `0N!` can be used to print intermediate values without side effects
+-   Q computes on atoms and vectors
+    
+    ```q
+    q)y*y:last x
+    81
+    q)x*x
+    0 1 4 9 16 25 36 49 64 81
+    ```
+
+-   Q is overloaded on type
+    
+    ```q
+    q)5?10f  / generate 5 random floats between (0,10f)
+    7.291734 8.583736 4.149568 6.787018 9.346245
+    q)5?10 / generate 5 random long integers between  [0,10)
+    7 5 1 4 1
+    ```
+
+-   and sign
+    
+    ```q
+    q)5?10     / with replacement
+    3 9 8 9 9
+    q)-5?10    / without replacement
+    7 6 3 4 8
+    q)0N?10
+    6 1 5 8 9 3 2 0 4 7
+    ```
+
+-   Q is vector functional
+    
+    ```q
+    q)fact:{prd 1+til x} / x,y,z are automatically defined
+    q)fact 10
+    3628800
+    ```
+
+-   Q is concise
+    
+    \begin{equation}
+    \sigma = \sqrt{ \frac{1}{n} \sum   \textstyle\frac{1}{2}\displaystyle    \left( \log \frac{H\_i}{L\_i} \right)^2  - (2\log 2-1)    \left( \log \frac{C\_i}{O\_i} \right)^2 }
+    \end{equation}
+    
+    ```q
+    / garman klass volatility (% is division - not mod)
+    gk:{[o;h;l;c]sqrt avg (.5*x*x:log h%l)-(-1f+2f*log 2f)*x*x:log c%o}
+    ```
+
+-   Q is picky about white space and semicolons
+    
+    ```q
+    / pivot table
+    pivot:{[t]
+     u:`\$string asc distinct last f:flip key t;
+     pf:{x#(`\$string y)!z};
+     p:?[t;();g!g:-1_ k;(pf;`u;last k:key f;last key flip value t)];
+     p}
+    ```
+
+-   Q has tables as primary data structures [^fn3]
+    
+    ```q
+    172.19.10.167:6000>tqmergeT[2017.07.31;`GEH0;-0Wn;0Wn]
+    date       sym  seq  t                     bsiz bid    siz prc    aggr ask    asiz 
+    -----------------------------------------------------------------------------------
+    2017.07.31 GEH0 31   -0D07:10:30.515273472 79   9799.5                 9800   34   
+    2017.07.31 GEH0 32   -0D07:01:32.062721024 37   9799.5                 9800   34   
+    2017.07.31 GEH0 36   -0D06:59:59.882012928 37   9799.5                 9800.5 45   
+    2017.07.31 GEH0 43   -0D06:59:59.834411776 313  9799.5                 9800.5 45   
+    2017.07.31 GEH0 45   -0D06:59:59.834379776 313  9799.5                 9800   47   
+    2017.07.31 GEH0 47   -0D06:59:59.836360406             2   9800   B                
+    2017.07.31 GEH0 49   -0D06:59:59.817472512 313  9799.5                 9800   45   
+    2017.07.31 GEH0 50   -0D06:59:59.788884224 314  9799.5                 9800   45   
+    2017.07.31 GEH0 51   -0D06:59:59.785928192 319  9799.5                 9800   45   
+    2017.07.31 GEH0 52   -0D06:59:59.784531200 287  9799.5                 9800   45   
+    2017.07.31 GEH0 54   -0D06:59:59.783757568 240  9799.5                 9800   45   
+    2017.07.31 GEH0 59   -0D06:59:59.756612864 240  9799.5                 9800   46   
+    ..
+    ```
+
+
+# Downloading Time and Sales Data
+
+Loading `ts.q` automatically attempts to download time and sales data
+(stored in CSV files) for each of the available futures datasets:
+
+```sh
+$ q
+KDB+ 3.5 2017.03.15 Copyright (C) 1993-2017 Kx Systems
+m32/ 4()core 8192MB nick nicks-macbookpro.local 25.34.72.89 NONEXPIRE
+
+q)\l ts.q
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/2012-11-05-corn-f..
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/2012-11-05-crude-..
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/2012-11-05-e-mini..
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/2012-11-05-euro-f..
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/2012-11-05-eurodo..
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/2012-11-05-gold-f..
+```
+
+
+# Dictionaries
+
+`ts.q` has also defined a dictionary mapping a symbol to the longer
+CSV file name strings.
+
+```q
+q)d
+corn      | "2012-11-05-corn-futures.csv"
+crude     | "2012-11-05-crude-oil-futures.csv"
+emini     | "2012-11-05-e-mini-s-p-futures.csv"
+eurusd    | "2012-11-05-euro-fx-futures.csv"
+eurodollar| "2012-11-05-eurodollar-futures.csv"
+gold      | "2012-11-05-gold-futures.csv"
+```
+
+Q dictionaries are associative lists that are declared with the <del>!</del>
+operator, and indexed with brackets or juxtaposition.
+
+```q
+q)1 2 3!"abc"
+1| a
+2| b
+3| c
+q)d[`corn]
+"2012-11-05-corn-futures.csv"
+q)d`corn
+"2012-11-05-corn-futures.csv"
+```
+
+
+# Loading CSV files
+
+```q
+q)read0 `\$d`corn
+"T.Date,T.Time,Sequence,Session Ind,Symbol,C/P/F,Contract Delivery,Volume,Strike Price,T.Price,A/..
+"20121105,16:00:12,3,E,C,F,1212,0,.0000000,738.6000000,,I,,,,,,,,,,20121104,CBT"
+"20121105,16:02:45,14,E,C,F,1212,0,.0000000,739.0000000,,I,,,,,,,,,,20121104,CBT"
+"20121105,16:04:17,19,E,C,F,1212,0,.0000000,738.6000000,,I,,,,,,,,,,20121104,CBT"
+"20121105,16:04:25,20,E,C,F,1212,0,.0000000,739.0000000,,I,,,,,,,,,,20121104,CBT"
+"20121105,16:06:02,29,E,C,F,1212,0,.0000000,738.6000000,,I,,,,,,,,,,20121104,CBT"
+"20121105,16:06:54,30,E,C,F,1212,0,.0000000,736.4000000,,I,,,,,,,,,,20121104,CBT"
+..
+```
+
+-   The `read0` operator loads the data from the file as a list of
+    strings
+-   The `\$` operator casts (or converts) between types. In this case,
+    from a string to a symbol
+
+```q
+q)d`corn
+"2012-11-05-corn-futures.csv"
+q)`\$d`corn
+`2012-11-05-corn-futures.csv
+```
+
+```q
+q)t:(" VI   MI FCC         D ";1#",") 0: read0 `\$d`emini
+q)t:(" VI   MI FCC         D ";1#",") 0: `\$d`emini
+q)t
+T.Time   Sequence Contract Delivery Volume T.Price A/B IND Entry Date
+---------------------------------------------------------------------
+16:02:57 11       2012.12           0      1405.75     I   2012.11.04
+16:04:23 12       2012.12           0      1405.5      I   2012.11.04
+16:22:24 29       2012.12           0      1406.75     I   2012.11.04
+16:22:41 30       2012.12           0      1406.5      I   2012.11.04
+16:22:50 35       2012.12           0      1405.75     I   2012.11.04
+..
+```
+
+-   The `0:` operator is the dyadic version of the monadic `read0`
+-   The `0:` operator can be supplied with a list of strings or the file
+    itself
+-   It allows us to supply the types: `" VI   MI FCC         D "`
+-   and the delimiter: `","` (`1#","` treats the first row as column
+    headers)
+-   Ignored columns are indicated by the space characters
+
+
+# Types
+
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| num | char | size | literal | null | inf | name | num | char | size | literal | null | inf | name |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | b | 1 | 0b | | | boolean | 11 | s | . | \` | \` | | symbol |
+| 2 | g | 16 | | 0Ng | | guid | 12 | p | 8 | dateDtimespan | 0Np | 0Wp | timestamp |
+| 3 | | | | | | unused | 13 | m | 4 | 2000.01m | 0Nm | 0Wm | month |
+| 4 | x | 1 | 0x0 | | | byte | 14 | d | 4 | 2000.01.01 | 0Nd | 0Wd | date |
+| 5 | h | 2 | 0h | 0Nh | | short | 15 | z | 8 | dateTtime | 0Nz | 0Wz | datetime |
+| 6 | i | 4 | 0i | 0Ni | 0Wi | int | 16 | n | 8 | 00:00:00.000000000 | 0Nn | 0Wn | timespan |
+| 7 | j | 8 | 0 | 0N | 0W | long | 17 | u | 4 | 00:00 | 0Nu | 0Wu | minute |
+| 8 | e | 4 | 0e | 0Ne | 0we | real | 18 | v | 4 | 00:00:00 | 0Nv | 0Wv | second |
+| 9 | f | 8 | 0.0/0f | 0n | 0w | float | 19 | t | 4 | 00:00:00.000 | 0Nt | 0Wt | time |
+| 10 | c | 1 | " " | " " | | char | 20 | | | | | | enum |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
+
+# Renaming Columns
+
+```q
+q)t:`time`seq`expiry`qty`px`side`ind`date xcol t
+q)t
+time     seq expiry  qty px      side ind date
+----------------------------------------------------
+16:02:57 11  2012.12 0   1405.75      I   2012.11.04
+16:04:23 12  2012.12 0   1405.5       I   2012.11.04
+16:22:24 29  2012.12 0   1406.75      I   2012.11.04
+16:22:41 30  2012.12 0   1406.5       I   2012.11.04
+16:22:50 35  2012.12 0   1405.75      I   2012.11.04
+..
+```
+
+-   The original data had column names with spaces
+-   To use the data with q-SQL, we need to fix this
+-   The `xcol` operator accepts a symbol list as the new column names
+
+
+# Using q-SQL
+
+```q
+q)trade:select `p#expiry,seq,time+date,tp:px,ts:qty from t where null side, null ind
+q)trade
+expiry  seq  time                          tp      ts
+-----------------------------------------------------
+2012.12 1977 2012.11.04D17:00:00.000000000 1403    1
+2012.12 1978 2012.11.04D17:00:00.000000000 1403    1
+2012.12 1979 2012.11.04D17:00:00.000000000 1403    2
+2012.12 1982 2012.11.04D17:00:00.000000000 1402.75 2
+2012.12 1983 2012.11.04D17:00:00.000000000 1402.5  1
+..
+```
+
+-   q-SQL allows database queries within your code
+-   Many operations, such as `time+date`, leave the column title unchanged
+-   Optionally, we may rename the column, `tp:px`
+-   The `where` clause applies the filters from left to right
+-   The `` `p# `` operator is applying the **parted** attribute to the `seq` column
+
+
+# Attributes
+
+By default, searches on lists (and therefore dictionaries and table
+columns) use a linear search across all elements.  Attributes can be
+applied to lists to speed up these searches.
+
+There are four attributes: `` `s`u`p`g ``
+
+-   **sorted:** asserts the data is sorted and permits q to perform a
+    binary search: `1 1 2 3 3 3 3 4 5` (typically used on the `time`
+    column of an RDB)
+
+-   **unique:** creates an internal hashmap from each value to its
+    array index: `1 10 9 12 -2` (typically used on dictionaries keys or
+    the first column of a 1-column keyed table)
+
+-   **parted:** creates an internal hashmap of each value to its first
+    array index and element count: `5 5 5 1 1 2 2 4 4 4` (typically used
+    on the `sym` column of an HDB)
+
+-   **grouped:** creates an internal hashmap of each value to each of
+    its array indices: `1 2 1 10 2 -1 2 1` (typically used on the `sym`
+    column of an RDB)
+
+Determining the key of a dataset is of vital importance.  This column
+(or columns) should be the first few columns of the table.  In this
+case, the `expiry` column uniquely identifies each future contract.
+Analysis of the data revealed that it was **not** stored in
+chronological order across all contracts - but only within each
+contract.  Since each contract was stored in consecutive rows of the
+table, the `` `p `` attribute was the correct choice.
+
+
+# Downloading Best Bid and Offer Data
+
+Loading `bbo.q` automatically downloads (and uncompresses) the BBO
+data (stored in fixed-width text files).
+
+```q
+q)\l bbo.q
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/XCBT_C_FUT_110110.zip"
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/XNYM_CL_FUT_110110.zip"
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/XCME_ES_FUT_110110.zip"
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/XCME_EC_FUT_110110.zip"
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/XCME_ED_FUT_110110.zip"
+"http://www.cmegroup.com/market-data/datamine-historical-data/files/XNYM_GC_FUT_110110.zip"
+q)4#read0 `XNYM_GC_FUT_110110.TXT
+"2011011013030900000010EGC F110100000       100136851 I          110109"
+"2011011017001000000020EGC F110100002       100136971A M        M110109"
+"2011011017001000000020EGC F110100001       100136911B M        M110109"
+"2011011017001500000030EGC F110100002       100136981A M        M110109"
+```
+
+
+# Configuration Files
+
+Instead of polluting source code with column names, types and
+descriptions, [this information](https://www.cmegroup.com/confluence/display/EPICSANDBOX/Top+of+Book+-+BBO#TopofBook-BBO-LayoutGuides) has been stored in `bbo.csv` which we
+can easily load.
+
+```q
+q)m:("HSHHJC*";1#",") 0: `:bbo.csv
+q)m
+id name    start end len typ description
+-------------------------------------------------------------------------------------------------------
+1  date    1     8   8   D   "YYYYMMDD- Day the trade or quote was entered"
+2  time    9     14  6   V   "HHMMSS- Time the trade or quote was entered in the system"
+3  seq     15    22  8   I   "######## - sequence the quote or trade was entered into the system"
+4  session 23    23  1   C   "(R/E) Indicates the Regular (PIT) or Electronic (GLOBEX) trading session"
+5  sym     24    26  3   S   "The product code"
+..
+```
+
+-   `type` (a q keyword) is often replaced with `typ`, `tipe`, `[a-z]type`
+-   `sym` is the most common name for a security identifiers and has special treatment in Q
+-   `session` is a single text character, and should therefore be stored as a `"C"`, and not an `"S"`
+
+
+# Ignoring Columns
+
+-   We can make loading the file faster by ignore unused columns
+-   This reduces the memory consumed and increases performance by
+    avoiding parsing those columns
+    
+    ```q
+    q)m:update typ:" " from m where not name in `expiry`seq`time`edate`side`px`pxdl`qty`ind`mq
+    q)select from m where not null typ
+    id name   start end len typ description
+    ------------------------------------------------------------------------------------------------
+    2  time   9     14  6   V   "HHMMSS- Time the trade or quote was entered in the system"
+    3  seq    15    22  8   I   "######## - sequence the quote or trade was entered into the system"
+    7  expiry 28    31  4   M   "(YYMM) Indicates the month the contract expires"
+    8  qty    32    36  5   I   "Number of contracts available for trade or traded"
+    11 px     45    51  7   I   "Indicates actual price traded"
+    12 pxdl   52    52  1   H   "Decimal place indicator for traded price"
+    13 side   53    53  1   C   "Indicates for Bids (B) / Offers (A)"
+    14 ind    54    54  1   C   "Indicative Market Quotes ( I )"
+    15 mq     55    55  1   C   "Indicator for Market Quotes ( M )"
+    24 edate  65    70  6   D   "YYMMDD - Entry date of trade"
+    ```
+
+-   A common data transfer technique is to pass floats as integers with
+    another integer indicating the number of decimals
+
+
+# Parsing Fixed-Width Files
+
+-   The `0:` operator can be passed a list of types and lengths (instead
+    of the field delimiter)
+    
+    ```q
+    q)m[`typ`len]
+      V I       M I     I H C C C                 D
+    8 6 8 1 3 1 4 5 7 1 7 1 1 1 1 1 2 1 1 1 1 1 1 6
+    ```
+
+-   Fixed-with files are returned as a list of lists (because there are
+    no column headers)
+    
+    ```q
+    q)m[`typ`len] 0: `\$d`emini
+    13:02:40   16:18:13   16:18:14   16:29:28   16:30:35   16:30:58   16:31:01   16:31:38   16:31:41 ..
+    10         20         30         40         50         60         70         80         90       ..
+    2011.03    2011.03    2011.03    2011.03    2011.03    2011.03    2011.03    2011.03    2011.03  ..
+    0          0          0          0          0          0          0          0          0        ..
+    126750     126800     126750     126775     126825     126775     126825     126775     126725   ..
+    2          2          2          2          2          2          2          2          2        ..
+                                     B                     B                     B                   ..
+    I          I          I          I          I          I          I          I          I        ..
+                                                                                                     ..
+    2011.01.09 2011.01.09 2011.01.09 2011.01.09 2011.01.09 2011.01.09 2011.01.09 2011.01.09 2011.01.0..
+    ```
+
+
+# Flipped Dictionaries of Lists
+
+-   The `exec` operator can be used (instead of `select`) to return a list of values
+    
+    ```q
+    q)exec name from m where not null typ
+    `time`seq`expiry`qty`px`pxdl`side`ind`mq`edate
+    ```
+
+-   Tables are flipped dictionaries of lists
+    
+    ```q
+    q)t:flip (exec name from m where not null typ)!m[`typ`len] 0: `\$d`emini
+    q)t
+    time     seq expiry  qty px     pxdl side ind mq edate
+    -----------------------------------------------------------
+    13:02:40 10  2011.03 0   126750 2         I      2011.01.09
+    16:18:13 20  2011.03 0   126800 2         I      2011.01.09
+    16:18:14 30  2011.03 0   126750 2         I      2011.01.09
+    16:29:28 40  2011.03 0   126775 2    B    I      2011.01.09
+    16:30:35 50  2011.03 0   126825 2         I      2011.01.09
+    16:30:58 60  2011.03 0   126775 2    B    I      2011.01.09
+    16:31:01 70  2011.03 0   126825 2         I      2011.01.09
+    ..
+    ```
+
+
+# Updating Columns
+
+-   The `update` operator adds new columns or modifies columns in-place
+-   The `xexp` operator is a two-parameter variant of `exp` which allows the specification of the base
+-   Multiplication (by `.01 xexp pdxl`) is faster than division (by `10 xexp pdxl`)
+
+```q
+q)t:update time+edate,px*.01 xexp pxdl from t
+q)t
+time                          seq expiry  qty px      pxdl side ind mq edate
+---------------------------------------------------------------------------------
+2011.01.09D13:02:40.000000000 10  2011.03 0   12.675  2         I      2011.01.09
+2011.01.09D16:18:13.000000000 20  2011.03 0   12.68   2         I      2011.01.09
+2011.01.09D16:18:14.000000000 30  2011.03 0   12.675  2         I      2011.01.09
+2011.01.09D16:29:28.000000000 40  2011.03 0   12.6775 2    B    I      2011.01.09
+2011.01.09D16:30:35.000000000 50  2011.03 0   12.6825 2         I      2011.01.09
+..
+```
+
+
+# Building a Trade Table
+
+-   The `side` column distinguishes between Bid (`"B"`), Ask (`"A"`) and Trades (`" "`)
+-   The `ind` column distinguishes between Indicative (`"I"`) and Firm (`" "`) prices
+-   A `trade` table can be built from the non-indicative trade records
+
+```q
+q)trade:select `p#expiry,seq,time,tp:px,ts:qty from t where null side, null ind
+q)trade
+expiry  seq time                          tp      ts
+-----------------------------------------------------
+2011.03 230 2011.01.09D17:00:00.000000000 12.6625 752
+2011.03 250 2011.01.09D17:00:00.000000000 12.6625 6
+2011.03 270 2011.01.09D17:00:00.000000000 12.665  5
+2011.03 290 2011.01.09D17:00:00.000000000 12.665  6
+2011.03 310 2011.01.09D17:00:00.000000000 12.665  1
+..
+```
+
+
+# Building a Rack
+
+-   The `mq` column indicates a valid market quote
+-   The `time` column only has resolution down to the second
+-   The `seq` column was provided to pair associated Bid and Ask prices
+-   Not every Bid record has an associated Ask record and vice versa
+-   We first create a 'rack' which includes every distinct `expiry` and `seq` along with the associated `time`.
+
+```q
+q)quote:select distinct expiry,seq,time from t where not null mq, not null side
+q)quote
+expiry  seq time
+-----------------------------------------
+2011.03 240 2011.01.09D17:00:00.000000000
+2011.03 260 2011.01.09D17:00:00.000000000
+2011.03 280 2011.01.09D17:00:00.000000000
+2011.03 300 2011.01.09D17:00:00.000000000
+2011.03 320 2011.01.09D17:00:00.000000000
+..
+```
+
+
+# Keyed Tables
+
+-   When given a numeric left operand, the `!` operator creates a keyed table with that many columns
+-   As hinted by the use of the `!` operator, a keyed table is actually a dictionary
+
+```q
+q)2!select `p#expiry,seq,bs:qty,bp:px from t where side="B"
+expiry  seq| bs  bp
+-----------| -----------
+2011.03 40 | 0   12.6775
+2011.03 60 | 0   12.6775
+2011.03 80 | 0   12.6775
+2011.03 100| 0   12.6775
+2011.03 240| 100 12.6625
+..
+```
+
+
+# Left Joins
+
+-   The `lj` (left-join) operator joins two tables based on the key of the right operand
+-   Any attribute on the first keyed column is used to improve performance
+
+```q
+q)quote:quote lj 2!select `p#expiry,seq,bs:qty,bp:px from t where side="B"
+q)quote:quote lj 2!select `p#expiry,seq,ap:px,as:qty from t where side="A"
+q)quote
+expiry  seq time                          bs  bp      ap     as
+---------------------------------------------------------------
+2011.03 240 2011.01.09D17:00:00.000000000 100 12.6625 12.665 73
+2011.03 260 2011.01.09D17:00:00.000000000 94  12.6625 12.665 73
+2011.03 280 2011.01.09D17:00:00.000000000 94  12.6625 12.665 68
+2011.03 300 2011.01.09D17:00:00.000000000 94  12.6625 12.665 62
+2011.03 320 2011.01.09D17:00:00.000000000 94  12.6625 12.665 61
+..
+```
+
+
+# Asof Join
+
+-   The `aj` operator joins the most recent record of the right operand
+-   The last specified join key is treated as the 'time' column and must
+    be in ascending order (within the other specified join keys)
+-   This is usually the `time` column, but is `seq` in this dataset
+-   On large tables, the lack of an attribute on the first join key will
+    result in extremely slow joins
+-   `aj` is a 3 parameter function. For clarity, i have created a
+    **projection** by supplying the first two parameters, then using that
+    as a monadic function on the final table
+
+```q
+q)taq:aj[`expiry`seq;trade] select `p#expiry,seq,bs,bp,ap,as from quote
+q)taq
+expiry  seq time                          tp      ts  bs  bp      ap     as
+---------------------------------------------------------------------------
+2011.03 230 2011.01.09D17:00:00.000000000 12.6625 752
+2011.03 250 2011.01.09D17:00:00.000000000 12.6625 6   100 12.6625 12.665 73
+2011.03 270 2011.01.09D17:00:00.000000000 12.665  5   94  12.6625 12.665 73
+2011.03 290 2011.01.09D17:00:00.000000000 12.665  6   94  12.6625 12.665 68
+2011.03 310 2011.01.09D17:00:00.000000000 12.665  1   94  12.6625 12.665 62
+..
+```
+
+
+# Aggregations
+
+-   The `xbar` operator rounds data **down** to the nearest specified unit
+-   The `by` q-SQL clause groups the data before operations are performed on each group
+
+```q
+q)ohlc:select o:first tp,h:max tp,l:min tp,c:last tp by expiry,0D00:01 xbar time from taq
+q)ohlc
+expiry  time                         | o       h       l       c
+-------------------------------------| -------------------------------
+2011.03 2011.01.09D17:00:00.000000000| 12.6625 12.6675 12.6525 12.6575
+2011.03 2011.01.09D17:01:00.000000000| 12.6575 12.6575 12.6475 12.65
+2011.03 2011.01.09D17:02:00.000000000| 12.65   12.6525 12.6475 12.65
+2011.03 2011.01.09D17:03:00.000000000| 12.65   12.65   12.645  12.6475
+2011.03 2011.01.09D17:04:00.000000000| 12.65   12.6525 12.645  12.65
+..
+```
+
+
+# Pivoting
+
+-   The `.q4q.pivot` function creates a grid of data based on the last column of the supplied keyed table
+-   The new column headers are taken from the last keyed column
+
+```q
+q).q4q.pivot select vol:sqrt[252*24*60]*.q4q.gk[o;h;l;c] by 0D02 xbar time,expiry from ohlc
+time                         | 2011.03    2011.06    2011.09
+-----------------------------| -------------------------------
+2011.01.09D16:00:00.000000000| 0.1053295  0.04650148
+2011.01.09D18:00:00.000000000| 0.08071778 0
+2011.01.09D20:00:00.000000000| 0.07622256 0
+2011.01.09D22:00:00.000000000| 0.04644545 0
+2011.01.10D00:00:00.000000000| 0.07905985 0
+2011.01.10D02:00:00.000000000| 0.1330154  0
+2011.01.10D04:00:00.000000000| 0.1124014  0
+2011.01.10D06:00:00.000000000| 0.1224625  0
+2011.01.10D08:00:00.000000000| 0.2600369  0.05781686 0.3431435
+2011.01.10D10:00:00.000000000| 0.2180361  0.03049376
+2011.01.10D12:00:00.000000000| 0.1405572  0.02547496
+2011.01.10D14:00:00.000000000| 0.1533374  0
+```
+
+
+# Saving/Loading KDB+ Data
+
+-   The `set` operator saves KDB+ variables as a single binary file
+    
+    ```q
+    q)`:trade set trade
+    `:trade
+    ```
+
+-   The `get` operator loads a single binary KDB+ file into memory
+    
+    ```q
+    q)get `:trade
+    expiry  seq time                          tp      ts
+    -----------------------------------------------------
+    2011.03 230 2011.01.09D17:00:00.000000000 12.6625 752
+    2011.03 250 2011.01.09D17:00:00.000000000 12.6625 6
+    2011.03 270 2011.01.09D17:00:00.000000000 12.665  5
+    2011.03 290 2011.01.09D17:00:00.000000000 12.665  6
+    2011.03 310 2011.01.09D17:00:00.000000000 12.665  1
+    ..
+    ```
+
+
+# Saving CSV Data
+
+-   With a character left operand, the `0:` operator converts a table
+    into a delimited string
+    
+    ```q
+    q)"," 0: trade
+    "expiry,seq,time,tp,ts"
+    "2011-03,230,2011-01-09D17:00:00.000000000,12.6625,752"
+    "2011-03,250,2011-01-09D17:00:00.000000000,12.6625,6"
+    "2011-03,270,2011-01-09D17:00:00.000000000,12.665,5"
+    "2011-03,290,2011-01-09D17:00:00.000000000,12.665,6"
+    "2011-03,310,2011-01-09D17:00:00.000000000,12.665,1"
+    "2011-03,330,2011-01-09D17:00:00.000000000,12.665,1"
+    ..
+    ```
+
+-   With a symbol left operand, the `0:` operator saves a list of
+    strings as text in a file
+    
+    ```q
+    q)`:trade.csv 0: "," 0: trade
+    `:trade.csv
+    ```
+
+
+# Homework
+
+Teams of 4/5 will submit a single `.q` file - that I will execute -
+which contains the following:
+
+-   A block comment containing the banner printed when you run q.  (20 pts)
+    
+    ```sh
+    /
+    KDB+ 3.5 2017.03.15 Copyright (C) 1993-2017 Kx Systems
+    m32/ 4()core 8192MB nick nicks-macbookpro.local 25.34.72.89 NONEXPIRE
+    \
+    ```
+-   A comment specifying the URL of a CSV or fixed-width dataset that is
+    freely available on the web and has more than 10,000 rows. (20 pts)
+-   Code using the provided `.q4q.download` function to download the
+    dataset from within q. (5 pts)
+-   Code to import the dataset into KDB+ using the `0:` operator -
+    making sure to load each column as the most appropriate data
+    type. (10 pts)
+-   A `select` statement to reshape the dataset - ensuring the
+    identifying columns are in the front. (5 pts)
+-   An `update` statement to apply an appropriate attribute
+    (`` `s ``,~\`u~,~\`p~ or `` `g ``) to the first column and a comment
+    explaining why you chose the attribute. (10 pts)
+-   A query to computing an aggregating statistic using the `by`
+    operator. (15 pts)
+-   A statement generating a report by using the `.q4q.pivot` function
+    on the previous query. (5 pts)
+-   Code to save the report as a CSV to disk. (5 pts)
+-   A block comment summarizing your findings. (5 pts)
+
+
+<!----- Footnotes ----->
+
+[^fn1]: windows users should install the proper version (32 vs 64) for their operating system - installed in "C:\Program Files\\7-zip"
+[^fn2]: If you decide to use this editor - you can connect to your q process by starting it with a port `q ts.q -p 5000`
+[^fn3]: CME data from Market Microstructure and Algorithmic Trading taught by Robert Almgren and Duane Seppi

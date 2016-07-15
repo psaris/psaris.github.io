@@ -1,0 +1,227 @@
+#+COMMENT: -*- mode: org; mode:flyspell -*-
+
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+OPTIONS: email:t f:t inline:t num:nil p:nil pri:nil prop:nil
+#+OPTIONS: stat:t tags:t tasks:t tex:t timestamp:nil title:t toc:nil
+#+OPTIONS: todo:t |:t
+#+OPTIONS: html-postamble:nil
+#+JEKYLL_TAGS: mnist
+#+JEKYLL_CATEGORIES: Competition
+
+#+TITLE: Parsing the MNIST Data Set
+#+SUBTITLE: Presented at KxCon2016
+#+DATE: <2016-05-22 Sun>
+#+AUTHOR: Nick Psaris
+#+EMAIL: nick@vector-sigma.com
+
+
+* Recap of Competition Rules
+
+- Convert a self-describing vector of bytes into an n-dimensional
+  array of the specified type
+- Points given for:
+  + Fastest submission
+  + Smallest submission
+  + Shortest submission
+- Tie-breaker based on timing of first submission
+
+Complete competition rules can be found [[/assets/docs/kxcon2016-challenge.pdf][here]]. 
+
+* Parsing Data
+
+|                      | text                   | binary                                 |
+|----------------------+------------------------+----------------------------------------|
+| read file            | ~read0~                | ~read1~                                |
+| parse file or vector | ~0:~                   | ~1:~                                   |
+| cast single element  | ~TYPE $ cvec~          | ~0x0 sv bvec~                          |
+| fixed width          | ~(width;type) 0: cvec~ | ~(width;type) 1: bvec~ (big endian)    |
+|                      |                        | ~(type;width) 1: bvec~ (little endian) |
+| delimited            | ~(type;delim) 0: cvec~ |                                        |
+
+* Understanding the Header
+
+- Bytes 1 and 2 are empty (presumably reserved for versioning)
+- Byte 3 indicates the data type ([un]signed byte, short, int, real,
+  float)
+- Byte 4 specifies the dimensionality of th n-array
+- The next n integers (n*4 bytes) list the sizes of each dimension
+- Remaining bytes contain the data
+
+|  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 |
+| 00 | 00 | 09 | 02 | 00 | 00 | 00 | 02 | 00 | 00 | 00 | 10 |
+
+* Parsing the Header
+
+#+begin_src q
+ldidx:{
+ d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+#+end_src
+
+- ~h~ is the length of the header
+- ~d~ is the vector of dimensions
+
+* Parsing the Data
+
+#+begin_src q
+ldidx:{
+ d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+ x:first ((1 1 0N 2 4 4 8;"xx hief")@\:(),x[2]-0x08) 1: h _x;
+#+end_src
+
+- ~x~ now has a single vector of data cast to the type specified in
+  byte 3
+- There is no parse-time syntax for specifying a single element
+  literal list so we need an extra operation: ~(),~
+
+* Reshaping the Data
+- For 1 dimension we can just return the data
+- For 2 dimensions we can use ~cut~ or ~#~
+
+  #+begin_src q
+  q)10 cut til 20
+  0  1  2  3  4  5  6  7  8  9 
+  10 11 12 13 14 15 16 17 18 19
+  q)2 10 # til 20
+  0  1  2  3  4  5  6  7  8  9 
+  10 11 12 13 14 15 16 17 18 19
+  #+end_src
+
+- What about 3+ dimensions?[fn:1]
+  #+begin_src q
+  shape:{y {y cut x}/reverse 1_x,()}
+  #+end_src
+
+  #+begin_src q
+  q)shape[2 10] til 20
+  0  1  2  3  4  5  6  7  8  9 
+  10 11 12 13 14 15 16 17 18 19
+  q)shape[2 2 5] til 20
+  0 1 2 3 4      5 6 7 8 9     
+  10 11 12 13 14 15 16 17 18 19
+  #+end_src
+
+- Permit atomic argument by promoting ~x~ to list
+- But what about the edge conditions? What would q do?
+
+  #+begin_src q
+  q)2 5 # til 20
+  0 1 2 3 4
+  5 6 7 8 9
+  q)shape[2 5] til 20
+  0  1  2  3  4 
+  5  6  7  8  9 
+  10 11 12 13 14
+  15 16 17 18 19
+  #+end_src
+- We need to extend/truncate the initial vector before reshaping it.
+
+
+  #+begin_src q
+  shape:{(prd[x]#y){y cut x}/reverse 1_x,()}
+  k)shape:{((*/x)#y){y#x}/0N,'|1_x,()}
+  #+end_src
+
+  #+begin_src q
+  q)0N!shape[2 2 5] til 10;
+  ((0 1 2 3 4;5 6 7 8 9);(0 1 2 3 4;5 6 7 8 9))
+  #+end_src
+
+* Fast Solutions
+
+- Basic Solution
+  #+begin_src q
+  ldidx:{
+   d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+   x:first ((1 1 0N 2 4 4 8;"xx hief")@\:(),x[2]-0x08) 1: h _x;
+   x:((prd[d])#x){y cut x}/reverse 1_d;
+   x}
+  #+end_src
+
+  But why call ~1:~ to convert bytes to bytes?  Just return the vector!
+
+- Fastest (and Smallest) Solution
+  #+begin_src q
+  ldidx:{
+   d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+   x:$[0>i:x[2]-0x0b;::;first ((2 4 4 8;"hief")@\:i,()) 1:] h _x;
+   x:((prd[d])#x){y cut x}/reverse 1_d;
+   x}
+  #+end_src
+
+
+* Short Solutions
+
+- Function calls (including lambdas) only add two bytes (no matter
+  what is inside the function/lambda)
+
+  #+begin_src q
+  ldidx:{
+   {d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+   x:$[0>i:x[2]-0x0b;::;first ((2 4 4 8;"hief")@\:i,()) 1:] h _x;
+   x:((prd[d])#x){y cut x}/reverse 1_d;
+   x}x}
+  #+end_src
+
+  #+begin_src q
+  q)count first get ldidx
+  5
+  #+end_src
+
+* Shortest Solution
+
+- Given a composition, ~get~ returns the list of composed functions
+
+  #+begin_src q
+  q)f:{}@
+  q)get f
+  @
+  {}
+  q)count first get f
+  1
+  #+end_src
+
+  #+begin_src q
+  ldidx:{
+   d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+   x:$[0>i:x[2]-0x0b;::;first ((2 4 4 8;"hief")@\:i,()) 1:] h _x;
+   x:((prd[d])#x){y cut x}/reverse 1_d;
+   x}@
+  #+end_src
+
+* Runner-Up Solution
+
+- Skipped calling 1: when dimension was greater than 2
+
+  #+begin_src q
+  k)ldidx:{
+   r:,/(2 1 1 4;" xxi")1:8#x;
+   f:([f:0x08090B0C0D0E]t:"xxhief";l:1 1 2 4 4 8)@r 0;
+   x:8_x;
+   $[0i~I:r 2;:(f`t)$();0x1~r 1;
+    :((,f`l;,f`t)1:(I*f`l)#x)0;0x2~r 1;
+    [M:((,4;,"i")1:4#x)[0;0];R:((,f`l;,f`t)1:(M*I*f`l)#x:4_x)0;:(M,I)#R]];
+   O:,/(4 4;"ii")1:8#x;
+   (O#)'[I#((+[prd O])\[7h$I;0])_x:8_x]}
+  #+end_src
+
+* Winning Solution
+
+- 1 byte-code and least bytes allocated
+
+  #+begin_src q
+  ldidx:{ {(prd[x]#y){y#x}/0Ni,'reverse 1_x}[0x0 sv'0N 4#x 4+til 4*x 3;first(1 2 4 4 8;"xhief")[;enlist 0|-10+x 2]1:(4*1+x 3)_ x]}@
+  #+end_src
+
+- Combining the Best Ideas and kdb+ 3.4's native multi-dimensional ~#~
+  #+begin_src q
+  ldidx:{
+   d:first (1#4;1#"i") 1: 4_(h:4*1+x 3)#x;
+   x:d#$[0>i:x[2]-0x0b;::;first ((2 4 4 8;"hief")@\:i,()) 1:] h _x;
+   x}@
+  #+end_src
+
+* Footnotes
+
+[fn:1] kdb+ 3.4 was updated to include a multi-dimensional ~#~
+operator (specifically for this competition)
