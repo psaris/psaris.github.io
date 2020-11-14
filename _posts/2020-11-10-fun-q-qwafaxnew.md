@@ -1,0 +1,1286 @@
+---
+title: "Fun Q: QWAFAxNEW"
+excerpt: "Presented at QWAFAxNEW's Speaker Series"
+date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2020-11-10 Tue 17:00&gt;</span></span>
+categories: 
+- Presentation
+tags: 
+- ml 
+- decisiontree 
+- funq 
+- mnist
+---
+
+
+# Goals
+
+-   Introduce you to Q and KDB+
+-   Amaze you with 12 machine-learning algorithms
+-   Impress you with efficient code
+-   Dazzle you with ASCII plots
+-   Motivate you to learn more about ML and Q
+-   Cheer you up with a fun quote
+
+
+# Q Fundamentals
+
+
+## What is Q?
+
+-   The language behind the [world's fastest time series database](https://kx.com/blog/what-makes-time-series-database-kdb-so-fast/)
+-   Language Paradigms:
+    -   Interpreted
+    -   Dynamically Typed
+    -   Vectorized
+    -   Functional
+    -   Event-driven
+-   Think Python but with native support for:
+    -   SQL
+    -   Parallelization
+    -   Large Tables (> 1 Billion Rows)
+    -   Distributed Computing
+
+
+## Why do I like Q?
+
+-   Personally manage extremely large datasets with a single machine
+    -   Databases are directories
+    -   Partitions are sub-directories
+    -   Tables are sub-directories within partitions
+    -   Columns are files within table directories
+-   Efficiently joins disparate datasets&#x2014;making complex analysis
+    easy
+-   Vectorized computations reduces the interpreter overhead
+-   Vectors, matrices, dictionaries and tables are all *lists*
+-   Notation works intuitively across types
+-   Code-injection allows iterative development
+-   Q-SQL permits all q operators and even user-defined functions
+-   Null and infinite values are available for integer and temporal
+    types
+-   Functional paradigm promotes parallelism by separating functions
+    from data
+
+
+# *Fun Q* Overview
+
+
+## Where does *Fun Q* Fit in?
+
+-   The original Coursera machine-learning course was taught in
+    Matlab/Octave by Andrew Ng
+-   Why can't q be used for the same problems?
+-   It turns out that many machine-learning algorithms have
+    beautifully vectorized solutions in q
+-   5 years of continuous refactoring revealed common functional
+    paradigms in machine learning
+-   Small 1&#x2013;5 line functions are the perfect tool for teaching
+-   12 distinct machine-learning algorithm families are taught using
+    nothing but the 32-bit 'personal' edition or 64-bit 'on-demand'
+    edition of the q language
+-   Limiting all graphics to the terminal adds a bit of **fun** to the
+    journey
+
+
+## Algorithms
+
+-   K-Nearest Neighbors (KNN)
+-   K-Means/Medians/Mediods Clustering
+-   Hierarchical Agglomerative Clustering (HAC)
+-   Expectation Maximization (EM)
+-   Naive Bayes
+-   Decision Tree (ID3,C4.5,CART)
+-   Discrete Adaptive Boosting (AdaBoost)
+-   Boosted Aggregating (BAG) and Random Forest
+-   Linear Regression
+-   Logistic Regression and One-vs.-All
+-   Neural Network Classification/Regression
+-   Content-Based/Collaborative Filtering (Recommender Systems)
+-   Google PageRank
+
+
+# K-Nearest Neighbors (KNN)
+
+
+## K-Nearest Neighbors (KNN) Algorithm
+
+-   Predictions are made by aggregating the K nearest neighbors
+-   'Nearness' requires the definition of distance metrics
+    
+    ```q
+    mnorm:sum abs::                           / Manhattan (taxicab) norm
+    enorm2:{x wsum x}                         / Euclidean norm squared
+    enorm:sqrt enorm2::                       / Euclidean norm
+    
+    hdist:sum (<>)::                / Hamming distance
+    mdist:mnorm (-)::               / Manhattan (taxicab) distance
+    edist2:enorm2 (-)::             / Euclidean distance squared
+    edist:enorm (-)::               / Euclidean distance
+    ```
+
+-   Use data type to differentiate between classification and
+    regression
+    
+    ```q
+    / weighted average or mode
+    isord:{type[x] in 0 8 9h}               / is ordered
+    aom:{$[isord x;avg;mode]x}              / average or mode
+    waom:{[w;x]$[isord x;nwavg;wmode][w;x]} / weighted average or mode
+    ```
+
+```q
+/ find (k) smallest values from (d)istance vector (or matrix) and use
+/ (w)eighting (f)unction to return the best estimate of y
+knn:{[wf;k;y;d]
+ if[not type d;:.z.s[wf;k;y] peach d];    / recurse for matrix d
+ if[any n:null d;d@:i:where not n; y@:i]; / filter null distances
+ p:(waom . (wf d::;y)@\:#[;iasc d]::) peach k&count d; / make predictions
+ p}
+```
+
+
+## K-Nearest Neighbors (KNN) Example
+
+-   Load *Fun Q* library and famous Iris data set
+    
+    ```q
+    q)\l funq.q
+    q)\l iris.q
+    [down]loading iris data set
+    q)iris.t
+    species     slength swidth plength pwidth
+    -----------------------------------------
+    Iris-setosa 5.1     3.5    1.4     0.2   
+    Iris-setosa 4.9     3      1.4     0.2   
+    Iris-setosa 4.7     3.2    1.3     0.2   
+    Iris-setosa 4.6     3.1    1.5     0.2   
+    ..
+    ```
+-   Partition between train/test (and even validation)
+    
+    ```q
+    q)d:.ut.part[`test`train!4 1;0N?] iris.t
+    q)y:first get first `Y`X set' 0 1 cut value flip d.train
+    q)yt:first get first `Yt`Xt set' 0 1 cut value flip d.test
+    ```
+-   Train and test
+    
+    ```q
+    q)k:5
+    q)avg yt=.ml.knn[0n<;k;y] .ml.f2nd[.ml.edist X] Xt
+    0.975
+    q)avg yt=.ml.knn[sqrt 1f%;k;y] .ml.pedist2[X;Xt]
+    0.9583333
+    ```
+
+
+# K-Means Clustering
+
+
+## K-Means Clustering Algorithm
+
+-   Find K centroids which minimize the intra-cluster distances
+-   Lloyd's algorithm iteratively alternates between:
+    -   Assigning each data point to its *nearest* centroid
+    -   Updating centroid definitions by *summarizing* each cluster
+-   Fun Q algorithm implements a single round of Lloyd's algorithm
+-   Iteration is controlled by the user using q adverbs
+    -   Fixed number of iterations
+    -   Run until convergence
+    -   Run until custom test returns false
+
+```q
+/ using the (d)istance (f)unction, group matri(X) based on the closest
+/ (C)entroid and return the cluster indices
+cgroup:{[df;X;C]value group imin f2nd[df X] C}
+
+/ Stuart Lloyd's algorithm. uses (d)istance (f)unction to assign the
+/ matri(X) to the nearest (C)entroid and then uses the (c)entroid (f)unction
+/ to update the centroid location.
+lloyd:{[df;cf;X;C]cf X@\: cgroup[df;X;C]}
+
+kmeans:lloyd[edist2;avg'']      / k-means
+```
+
+
+## K-Means Clustering Example
+
+-   Plot actual clusters of petal length/width
+    
+    ```q
+    q).ut.plt (t.plength;t.pwidth;{distinct[x]?x} t.species)
+    3| "                   "
+     | "             @@@@  "
+     | "             @@@@ @"
+    2| "            @@@@@@@"
+     | "          ++x# @   "
+     | "        +++++ @    "
+    1| "      ++++         "
+     | " .                 "
+     | "...                "
+    0| "...                "
+    ```
+-   Plot computed centroids within each cluster
+    
+    ```q
+    q)C:.ml.kmeans[X] over last 3 .ml.kmeanspp[X]// 2#()
+    q).ut.plt .ml.append[0N;X 2 3],'.ml.append[1] C 2 3
+    3| "                   "
+     | "             ....  "
+     | "             .... ."
+    2| "            ...@..."
+     | "          .... .   "
+     | "        ..@.. .    "
+    1| "      ....         "
+     | " .                 "
+     | "...                "
+    0| ".@.                "
+    ```
+
+
+# Hierarchical Agglomerative Clustering (HAC)
+
+
+## Hierarchical Agglomerative Clustering (HAC) Algorithm
+
+-   Iteratively merges *closest* clusters &#x2014; one at a time
+-   Only the distances from previous round are needed
+-   Implements a single round of the Lance-Williams algorithm
+    
+    ```q
+    lancewilliams:{[lf;D;a;L]
+     n:count D;
+     d:D@'di:imin peach D;                        / find closest distances
+     if[null d@:i:imin d;:(D;a;L)]; j:di i;       / find closest clusters
+     c:$[9h=type lf;lf;lf(freq a)@/:(i;j;til n)]; / determine coefficients
+     nd:sum c*nd,(d;abs(-/)nd:D (i;j));           / calc new distances
+     D[;i]:D[i]:nd;                               / update distances
+     D[;j]:D[j]:n#0n;                             / erase j
+     a[where j=a]:i;                / all elements in cluster j are now in i
+     L:L,'(j;i);                    / append linkage stats
+     (D;a;L)}
+    ```
+-   The `.ml.link` function iterates and returns the linkage statistics
+    
+    ```q
+    link:{[lf;D]
+     D:@'[D;a:til count D;:;0n];    / define cluster assignments and ignore loops
+     if[-11h=type lf;lf:get lf];    / dereference lf
+     L:last .[lancewilliams[lf]] over (D;a;2#()); / obtain linkage stats
+     L}
+    ```
+
+
+## Lance-Williams Formula and Coefficients
+
+\\[ d\_{(ij)k} = \alpha\_i d\_{ik} + \alpha\_j d\_{jk} + \beta d\_{ij} +
+  \gamma \lvert d\_{ik} - d\_{jk} \rvert \\]
+
+| Method | \\(\alpha\_i\\) | \\(\alpha\_j\\) | \\(\beta\\) | \\(\gamma\\) |
+|---|---|---|---|---|
+| Single | .5 | .5 | 0 | -.5 |
+| Complete | .5 | .5 | 0 | .5 |
+| Average | \\(\frac{n\_i}{n\_i+n\_j}\\) | \\(\frac{n\_j}{n\_i+n\_j}\\) | 0 | 0 |
+| Weighted | .5 | .5 | 0 | 0 |
+| Centroid | \\(\frac{n\_i}{n\_i+n\_j}\\) | \\(\frac{n\_j}{n\_i+n\_j}\\) | \\(-\frac{n\_i n\_j}{(n\_i+n\_j)^2}\\) | 0 |
+| Median | .5 | .5 | -.25 | 0 |
+| Ward | \\(\frac{n\_i + n\_k}{n\_i+n\_j+n\_k}\\) | \\(\frac{n\_j + n\_k}{n\_i+n\_j+n\_k}\\) | \\(-\frac{n\_k}{n\_i+n\_j+n\_k}\\) | 0 |
+
+
+## Hierarchical Agglomerative Clustering (HAC) Example
+
+-   Build linkage statistics
+    
+    ```q
+    q)X:iris.X
+    q)L:.ml.link[`.ml.lw.ward] sqrt .ml.pedist2[X;X]
+    ```
+-   Visually inspect clusters of different sizes
+    
+    ```q
+    q)(,'/) (.ut.plt X[2 3],enlist .ut.ugrp@) each .ml.clust[L] 1+til 3
+    3| "                                                         "
+     | "             ++++               @@@@               +@@@  "
+     | "             ++++ +             @@@@ @             @@@@ @"
+    2| "            +++++++            @@@@@@@            +#@@@@@"
+     | "          ++++ +             @@@@ @             ++++ @   "
+     | "        +++++ +            @@@@@ @            +++++ @    "
+    1| "      ++++               @@@@               ++++         "
+     | " +                  .                  .                 "
+     | "+++                ...                ...                "
+    0| "+++                ...                ...                "
+    ```
+
+
+# Expectation Maximization (EM)
+
+
+## Expectation Maximization (EM) Algorithm
+
+-   Iteratively alternates between using the likelihood and MLE to:
+    -   Assign a *probability* that points belongs to a distribution
+    -   Compute new distribution parameters
+-   Using Gaussian distribution, can be considered a **soft** K-Means
+-   Introduces probability metrics to the toolbox
+-   Implements a single round of Expectation Maximization
+    
+    ```q
+    / using (l)ikelihood (f)unction, (w)eighted (m)aximum likelihood estimator
+    / (f)unction with prior probabilities (p)hi and distribution parameters
+    / (THETA), optionally (f)fit (p)hi and perform expectation maximization
+    em:{[fp;lf;wmf;X;phi;THETA]
+     W:prb likelihood[0b;lf;X;phi;THETA]; / weights (responsibilities)
+     if[fp;phi:avg each W];               / new phi estimates
+     THETA:wmf[;X] peach W;               / new THETA estimates
+     (phi;THETA)}
+    ```
+
+
+## Expectation Maximization (EM) Example
+
+-   Initialized multi-variate Gaussian distribution parameters
+    
+    ```q
+    q)`X`y set' iris`X`y;
+    q)k:count distinct y
+    q)phi:k#1f%k
+    q)mu:X@\:/:neg[k]?count y
+    q)SIGMA:k#enlist X cov\:/: X
+    q)lf:.ml.gaussmvl
+    q)mf:.ml.wgaussmvmle
+    ```
+-   Fit Iris data to the distribution and compare clusters
+    
+    ```q
+    q)pT:(.ml.em[1b;lf;mf;X]//) (phi;flip (mu;SIGMA))
+    q)p:.ml.imax .ml.likelihood[1b;.ml.gaussmvll;X] . pT
+    q)m:.ml.mode each y group p
+    q)avg y=m p
+    0.8866667
+    ```
+
+
+## Confusion Matrix Example
+
+-   A confusion matrix compares expected vs actual values
+    
+    ```q
+    / given true labels y and predicted labels p, return a confusion matrix
+    cm:{[y;p]
+     n:count u:asc distinct y,p;
+     m:./[(n;n)#0;flip (u?p;u?y);1+];
+     t:([]y:u)!flip (`$string u)!m;
+     t}
+    ```
+-   Q tables clearly render the confusion matrix
+    
+    ```q
+    q).ut.totals[`TOTAL] .ml.cm[y;m p]
+    y              | Iris-setosa Iris-versicolor Iris-virginica TOTAL
+    ---------------| ------------------------------------------------
+    Iris-setosa    | 50          0               0              50   
+    Iris-versicolor| 0           49              1              50   
+    Iris-virginica | 0           16              34             50   
+                   | 50          65              35             150  
+    ```
+
+
+# Naive Bayes
+
+
+## Naive Bayes Algorithm
+
+-   'Naively' assumes conditional independence between features
+-   Does not require iterating
+-   Uses weighted maximum likelihood estimator functions along with
+    class labels to build a classifier
+    
+    ```q
+    / fit parameters given (w)eighted (m)aximization (f)unction returns a
+    / dictionary with prior and conditional likelihoods
+    fnb:{[wmf;w;y;X]
+     if[(::)~w;w:count[y]#1f];      / handle unassigned weight
+     pT:(odds g; (wmf . (w;X@\:) @\:) peach g:group y);
+     pT}
+    ```
+-   Classifies by using [log]likelihood function and picking class
+    with highest probability density
+    
+    ```q
+    / using a [log](l)ikelihood (f)unction and prior probabilities (p)hi and
+    / distribution parameters (T)HETA, perform naive Bayes classification
+    pnb:{[l;lf;pT;X]
+     d:{(x . z) y}[lf]'[X] peach pT[1]; / compute probability densities
+     c:imax $[l;log[pT 0]+sum flip d;pT[0]*prd flip d];
+     c}
+    ```
+
+
+## Naive Bayes Example
+
+-   Use MLE to associate each class with prior and conditional
+    likelihoods (not probabilities)
+    
+    ```q
+    q)flip pT:.ml.fnb[.ml.wgaussmle/:;::;iris.y;iris.X]
+    Iris-setosa    | 0.3333333 (5.006 0.121764;3.428 0.140816;1.462 0.029556;0.246 0.0108..
+    Iris-versicolor| 0.3333333 (5.936 0.261104;2.77 0.0965;4.26 0.2164;1.326 0.038324)   ..
+    Iris-virginica | 0.3333333 (6.588 0.396256;2.974 0.101924;5.552 0.298496;2.026 0.0739..
+    ```
+-   Classification picks the class with the maximum likelihood
+    density
+    
+    ```q
+    q)avg iris.y=.ml.pnb[0b;.ml.gaussl;pT] iris.X
+    .96
+    ```
+
+
+# Decision Tree
+
+
+## Decision Tree Algorithm
+
+-   Recursively splits observations on features, progressively
+    creating branches with more uniform target values
+-   Parameters include 'gain functions', 'impurity functions' and
+    options to control tree depth
+
+```q
+dt:{[cgf;ogf;ipf;opt;w;t]
+ if[(::)~w;w:n#1f%n:count t];       / compute default weight vector
+ if[1=count d:flip t;:(w;first d)]; / no features to test
+ opt:(`maxd`minss`minsl`ming`maxff!(0N;2;1;0;::)),opt; / default options
+ if[0=opt`maxd;:(w;first d)];    / check if we've reached max depth
+ if[identical a:first d;:(w;a)]; / check if all values are equal
+ if[opt[`minss]>count a;:(w;a)]; / check if insufficient samples
+ d:((neg floor opt[`maxff] count d)?key d)#d:1 _d;   / sub-select features
+ d:{.[x isord z;y] z}[(cgf;ogf);(ipf;w;a)] peach d;  / compute gains
+ d:(where (any opt[`minsl]>count each last::) each d) _ d; / filter on minsl
+ if[0=count d;:(w;a)];          / check if all leaves have < minsl samples
+ if[opt[`ming]>=first b:d bf:imax d[;0];:(w;a)]; / check gain of best feature
+ c:count k:key g:last b;        / grab subtrees, feature names and count
+ / distribute nulls down each branch with reduced weight
+ if[c>ni:null[k]?1b;w:@[w;n:g nk:k ni;%;c-1];g:(nk _g),\:n];
+ if[(::)~b 1;t:(1#bf)_t];       / don't reuse exhausted features
+ b[2]:.z.s[cgf;ogf;ipf;@[opt;`maxd;-;1]]'[w g;t g]; / split sub-trees
+ bf,1_b}
+```
+
+
+## Decision Tree Impurity Functions
+
+-   Impurity functions distill the impurity of branches into a single
+    value
+-   Classification impurity functions are used for categorical values
+    
+    ```q
+    misc:{1f-avg x=mode x}                  / misclassification
+    gini:{1f-enorm2 odds group x}           / Gini
+    entropy:{neg sum x*log x:odds group x}  / entropy
+    ```
+-   The Gini impurity function is used in the CART decision tree
+    algorithm (arguably because it is more efficient than the entropy
+    function which uses the `log` operator)
+-   Regression impurity functions are used for ordered values
+    
+    ```q
+    mse:{enorm2[x-avg x]%count x}          / mean squared error
+    mae:{avg abs x-avg x}                  / mean absolute error
+    ```
+
+
+## Decision Tree Projections
+
+-   Many famous decision tree implementations are just
+    parameterizations of `.ml.dt`
+-   Scikit-learn's CART algorithm trees treats all features as
+    ordered &#x2013; requiring users to first us one-hot encoding
+-   Ross Quinlan's C4.5 algorithm differentiates between categorical
+    and ordered features
+-   Regression trees use the same algorithm, but use a mean squared
+    error impurity function and predict values with the weighted
+    average of the branch values instead of the weighted mode
+
+```q
+aid:dt[sig;oig;wmse]            / automatic interaction detection
+thaid:dt[sig;oig;wmisc]         / theta automatic interaction detection
+id3:dt[ig;ig;wentropy]          / iterative dichotomizer 3
+q45:dt[gr;ogr;wentropy]         / like c4.5
+ct:dt[oig;oig;wgini]            / classification tree
+rt:dt[oig;oig;wmse]             / regression tree
+```
+
+
+## Decision Tree Example (ID3)
+
+-   To play or not to play
+    
+    ```q
+    q)\l weather.q
+    q)weather.t
+    Play Outlook  Temperature Humidity Wind  
+    -----------------------------------------
+    No   Sunny    Hot         High     Weak  
+    No   Sunny    Hot         High     Strong
+    Yes  Overcast Hot         High     Weak  
+    Yes  Rain     Mild        High     Weak  
+    Yes  Rain     Cool        Normal   Weak  
+    No   Rain     Cool        Normal   Strong
+    Yes  Overcast Cool        Normal   Strong
+    No   Sunny    Mild        High     Weak  
+    Yes  Sunny    Cool        Normal   Weak  
+    ..
+    ```
+
+-   Categorical features cannot be reused
+    
+    ```q
+    q)-1 .ml.ptree[0] .ml.id3[();::] weather.t;
+    Yes (n = 14, err = 35.7%)
+    |  Outlook :: Overcast: Yes (n = 4, err = 0%)
+    |  Outlook :: Rain: Yes (n = 5, err = 40%)
+    |  |  Wind :: Strong: No (n = 2, err = 0%)
+    |  |  Wind :: Weak: Yes (n = 3, err = 0%)
+    |  Outlook :: Sunny: No (n = 5, err = 40%)
+    |  |  Humidity :: High: No (n = 3, err = 0%)
+    |  |  Humidity :: Normal: Yes (n = 2, err = 0%)
+    ```
+
+
+## Decision Tree Example (CART)
+
+-   Each split is binary
+-   Features can be reused
+
+```q
+q)d:.ut.part[`train`test!3 1;iris.t.species] iris.t
+q)-1 .ml.ptree[0] tr:.ml.ct[();::] d`train;
+Iris-setosa (n = 111, err = 66.7%)
+|  plength >[;2.45] 0: Iris-setosa (n = 37, err = 0%)
+|  plength >[;2.45] 1: Iris-versicolor (n = 74, err = 50%)
+|  |  pwidth >[;1.7] 0: Iris-versicolor (n = 39, err = 7.7%)
+|  |  |  plength >[;4.95] 0: Iris-versicolor (n = 35, err = 0%)
+|  |  |  plength >[;4.95] 1: Iris-virginica (n = 4, err = 25%)
+|  |  |  |  pwidth >[;1.55] 0: Iris-virginica (n = 3, err = 0%)
+|  |  |  |  pwidth >[;1.55] 1: Iris-versicolor (n = 1, err = 0%)
+|  |  pwidth >[;1.7] 1: Iris-virginica (n = 35, err = 2.9%)
+|  |  |  plength >[;4.85] 0: Iris-virginica (n = 3, err = 33.3%)
+|  |  |  |  swidth >[;3.1] 0: Iris-virginica (n = 2, err = 0%)
+|  |  |  |  swidth >[;3.1] 1: Iris-versicolor (n = 1, err = 0%)
+|  |  |  plength >[;4.85] 1: Iris-virginica (n = 32, err = 0%)
+q)avg d.test.species=.ml.pdt[tr] d`test
+0.9487179
+```
+
+
+# Discrete Adaptive Boosting (AdaBoost)
+
+
+## Discrete Adaptive Boosting Algorithm
+
+-   An ensemble of weak learners generates a strong learner
+-   Weak learners merely need to classify with an accuracy > 50%
+-   Decision stumps are commonly used as weak learners
+-   Each additional learner adjusts weights to fit the observations
+    incorrectly classified during the previous round
+
+```q
+adaboost:{[tf;cf;w;t]
+ if[(::)~w;w:n#1f%n:count t];    / initialize weights
+ m:tf[w] t;                      / train model
+ p:cf[m] t;                      / make predictions
+ e:sum w*not p=y:first flip t;   / compute weighted error
+ a:.5*log (c:1f-e)%e;            / compute alpha (minimize exponential loss)
+ / w*:exp neg a*y*p;               / increase/decrease weights
+ / w%:sum w;                       / normalize weights
+ w%:2f*?[y=p;c;e];               / increase/decrease and normalize weights
+ (m;a;w)}
+```
+
+
+## Wisconsin Diagnostic Breast Cancer Data Set
+
+-   Includes mean, max and standard deviation of tumor features
+    
+    ```q
+    q)\l wdbc.q
+    [down]loading wisconsin-diagnostic-breast-cancer data set
+    q)10?wdbc.t
+    diagnosis radius_mean texture_mean perimeter_mean area_mean smoothness_mean compactne..
+    -------------------------------------------------------------------------------------..
+    B         11.89       18.35        77.32          432.2     0.09363         0.1154   ..
+    M         15.13       29.81        96.71          719.5     0.0832          0.04605  ..
+    B         12.85       21.37        82.63          514.5     0.07551         0.08316  ..
+    M         22.27       19.67        152.8          1509      0.1326          0.2768   ..
+    B         9.465       21.01        60.11          269.4     0.1044          0.07773  ..
+    B         9.683       19.34        61.05          285.7     0.08491         0.0503   ..
+    B         11.54       14.44        74.65          402.9     0.09984         0.112    ..
+    B         12.7        12.17        80.88          495       0.08785         0.05794  ..
+    M         13.61       24.69        87.76          572.6     0.09258         0.07862  ..
+    M         18.05       16.15        120.2          1006      0.1065          0.2146   ..
+    ```
+-   Malignant vs. Benign diagnosis feature can be used for binomial
+    classification
+
+
+## Discrete Adaptive Boosting Example
+
+-   Training accuracy improves with extra components
+    
+    ```q
+    q)d:.ut.part[`train`test!3 1;0N?] update -1 1 "M"=diagnosis from 11#/:wdbc.t
+    q)stump:.ml.ct[(1#`maxd)!1#1]; k:50
+    q)m:.ml.fab[k;stump;.ml.pdt] d.train
+    q).ut.plt avg d.train.diagnosis = .ml.pab[1+til k;.ml.pdt;m] d.train
+    1   | "                   "
+    0.98| "                  +"
+        | "            +++++++"
+    0.96| "       ++++++ +    "
+        | "  ++++++ +         "
+        | "+++                "
+    0.94| " +                 "
+    0.92| "                   "
+        | "+                  "
+    0.9 | "                   "
+    ```
+-   Testing accuracy does as well, but not as consistently
+    
+    ```q
+    q).ut.plt avg d.test.diagnosis = .ml.pab[1+til k;.ml.pdt;m] d.test
+    0.98| "         +       ++"
+        | "       ++ +++++    "
+    0.96| "++++++++    +  ++++"
+        | "   ++++ +    +     "
+    0.94| " ++                "
+        | "                   "
+        | "                   "
+    0.92| "+                  "
+        | "                   "
+    0.9 | "                   "     
+    ```
+
+
+# Boosted Aggregating (BAG) and Random Forest
+
+
+## Boosted Aggregating Algorithm
+
+-   Instead of complicated pruning techniques, fit many independent
+    trees and average the predictions
+-   Boosting involves random sampling (with replacement) of the data
+-   The difference between Boosted Aggregating and a Random Forest
+    comes down to how the tree is grown, not the ensemble algorithm
+-   To increase tree diversity, a Random Forest adds artificial
+    limits on the number of observed features at each tree level
+
+```q
+/ generate (n) decision trees by applying (f) to a resampled (with
+/ replacement) (t)able
+bag:{[n;f;t](f ?[;t]::) peach n#count t} / (b)ootstrap (ag)gregating
+
+/ given an atom or list (k), and bootstrap aggregating (m)odel, make
+/ prediction on (d)ictionary
+pbag:{[k;m;d]
+ if[count[m]<max k;'`length];
+ if[98h=type d;:.z.s[k;m] peach d]; / iterate on a table
+ p:k {aom x#y}\: pdt[;d] peach m;
+ p}
+```
+
+
+## Random Forest Example
+
+-   The decision tree algorithm provides the `maxff` option which
+    controls the maximum number of features visible at each branch
+-   Random Forest classification (`maxff = sqrt`)
+    
+    ```q
+    q)k:20
+    q)d:.ut.part[`train`test!3 1;0N?] wdbc.t
+    q)m:.ml.bag[k;.ml.q45[(1#`maxff)!1#sqrt;::]] d`train
+    q)avg d.test.diagnosis=.ml.pbag[k;m] d`test
+    0.9370629
+    ```
+-   Random Forest regression (`maxff = 1%3`)
+    
+    ```q
+    q)\l winequality.q
+    [down]loading wine-quality data set
+    q)d:.ut.part[`train`test!3 1;0N?] winequality.red.t
+    q)m:.ml.bag[k;.ml.rt[(1#`maxff)!1#%[;3];::]] d`train
+    q).ml.rms d.test.quality-.ml.pbag[k;m] d`test
+    0.5682814
+    ```
+
+
+# Linear Regression
+
+
+## Linear Regression Algorithm
+
+-   Q has a native multi-variate `lsq` operator
+-   The implementation is similar to this normal equations function
+    
+    ```q
+    / given target matrix Y and data matri(X), return the THETA matrix resulting
+    / from minimizing sum of squared residuals
+    normeq:{[Y;X]mm[mmt[Y;X]] minv mmt[X;X]} / normal equations ols
+    ```
+-   Inverting matrices is slow and numerically unstable
+-   So the `lsq` operator uses Cholesky decomposition to solve for
+    the coefficients directly instead of using LU decomposition to
+    first invert the normal equations matrix.
+-   Ridge regression is simply the addition of L2 regularization
+    
+    ```q
+    / given (l2) regularization parameter, target matrix Y and data matri(X),
+    / return the THETA matrix resulting from performing ridge regression
+    ridge:{[l2;Y;X]mm[mmt[Y;X]] minv mmt[X;X]+diag count[X]#l2}
+    ```
+
+
+## Linear Regression Example
+
+-   Use Box-Muller to generate correlated random variables
+    
+    ```q
+    q)plt:.ut.plot[30;15;.ut.c10]
+    q)X:(.ml.bm 10000?) each 1 1f
+    q)rho:.8                          / correlation
+    q)X[1]:(rho;sqrt 1f-rho*rho)$X
+    q)plt[sum] X
+    4 | "                       .   .  "
+      | "                   .   . ..  ."
+      | "                  ............"
+    2 | "               .............  "
+      | "             ....---::-.....  "
+      | "          ....-:++++:-.....   "
+      | "        ....:=+#%%x+--..      "
+    0 | "      ....-=x%@@%x:-...       "
+      | "     ....:+#%%%+:-...         "
+      | "    ....-+++x=:-... .         "
+      | "  ....---::--....             "
+    -2| "  ..............              "
+      | ". ..........                  "
+      | " . ......                     "
+    -4| " ..                           "
+    ```
+-   Prepending a vector of ones allows us to fit the intercept
+    
+    ```q
+    q)show THETA:(-1#X) lsq .ml.prepend[1f] 1#X
+    -0.008971004 0.8033666
+    ```
+
+
+# Logistic Regression
+
+
+## Logistic Regression Cost Function
+
+-   Logistic regression applies the Sigmoid function to compress
+    values between 0 and 1: \\(S(x)=\frac{1}{1+e^{-x}}\\)
+    
+    ```q
+    sigmoid:1f%1f+exp neg::                       / sigmoid
+    ```
+-   Cost function with L1 and L2 regularization \\[ J(\theta) =
+         \frac{1}{m} \left[ \sum\_{i=1}^m
+         \text{LogLoss}(y^{(i)},h\_\theta(x^{(i)})) \right] +
+         \frac{\lambda\_1}{m} \sum\_{j=1}^n\left|\theta\_j\right| +
+         \frac{\lambda\_2}{2m} \sum\_{j=1}^n\theta\_j^2\\]
+-   Regularized logistic regression cost function
+    
+    ```q
+    / logistic regression cost
+    logcost:{[rf;Y;X;THETA]
+     J:(1f%m:count X 0)*revo[sum] logloss[Y] plog[X;THETA];    / cost
+     if[count rf,:();THETA[;0]:0f; J+:sum rf[;m][;0][;THETA]]; / regularization
+     J}
+    ```
+
+
+## Logistic Regression Gradient Function
+
+-   Gradient function with L1 and L2 regularization
+    \\[G(\theta\_j)=\frac{\partial J(\theta)}{\partial \theta\_j}=
+         \frac{1}{m}\left(h\_\theta(x^{(i)})-y^{(i)}\right)x\_j^{(i)} +
+         \frac{\lambda\_1}{m} \text{sign}(\theta\_j) + \frac{\lambda\_2}{m}
+         \theta\_j \\]
+-   Regularized logistic regression gradient function
+    
+    ```q
+    / logistic regression gradient
+    loggrad:{[rf;Y;X;THETA]
+     G:(1f%m:count X 0)*mmt[sigmoid[mm[THETA;X]]-Y] X:prepend[1f] X; / gradient
+     if[count rf,:();THETA[;0]:0f; G+:sum rf[;m][;1][;THETA]]; / regularization
+     G}
+    ```
+
+
+## Logistic Regression Example
+
+-   Regularization choices have been factored out
+    
+    ```q
+    l1:{[l;m]((l%m)*revo[sum] abs::;(l%m)*signum::)}
+    l2:{[l;m]((.5*l%m)*revo[sum] {x*x}::;(l%m)*)}
+    ```
+-   Elastic net is simply a combination of the two
+    
+    ```q
+    enet:{[a;lr](l1 a*lr;l2 a*1f-lr)}
+    ```
+-   Regularized gradient descent prevents over-fitting
+    
+    ```q
+    q)t:11#/:update "M"=diagnosis from wdbc.t
+    q)d:.ut.part[`train`test!3 1;0N?] "f"$t
+    q)y:first get first `Y`X set' 0 1 cut value flip d`train
+    q)yt:first get first `Yt`Xt set' 0 1 cut value flip d`test
+    q)THETA:10000 .ml.gd[.1;.ml.loggrad[.ml.l2[.1];Y;X]]/ enlist (1+count X)#0f
+    q)avg yt="i"$p:first .ml.plog[Xt] THETA
+    0.8601399
+    q).ut.totals[`TOTAL] .ml.cm . "i"$(yt;p)
+    y| 0  1  TOTAL
+    -| -----------
+    0| 83 7  90   
+    1| 13 40 53   
+     | 96 47 143
+    ```
+
+
+# Neural Network Classification/Regression
+
+
+## Neural Network Algorithm
+
+-   Conceptually similar to applying multiple rounds of linear and/or
+    logistic regression in sequence
+-   But our choice of activation function and cost function can vary
+-   As can the number (and size of) of *hidden* layers
+-   Gradient descent is once again the workhorse
+-   Parameter adjustments are computed by applying the chain rule to
+    the final error and intermediate gradients
+
+```q
+/ (r)egularization (f)unction, (n)etwork topology dimensions, hgolf:
+/ (h)idden (g)radient (o)utput (l)oss functions
+nncostgrad:{[rf;n;hgolf;Y;X;theta]
+ THETA:nncut[n] theta;          / unroll theta
+ ZA:enlist[(X;X)],(X;X) {(z;x z:plin[y 1;z])}[hgolf`h]\ -1_THETA;
+ P:hgolf[`o] plin[last[ZA]1;last THETA];      / prediction
+ J:(1f%m:count X 0)*revo[sum] hgolf[`l][Y;P]; / cost
+ G:hgolf[`g]@'`z`a!/:1_ZA;                    / activation gradient
+ D:reverse{[D;THETA;G]G*1_mtm[THETA;D]}\[E:P-Y;reverse 1_THETA;reverse G];
+ G:(1f%m)*(D,enlist E) mmt' prepend[1f] each ZA[;1]; / full gradient
+ if[count rf,:();THETA[;;0]:0f;JG:rf[;m][;;THETA];J+:sum JG@'0;G+:sum JG@'1];
+ (J;2 raze/ G)}
+```
+
+
+## MNIST Hand Written Digits
+
+-   Each digit is represented by a 28 x 28 pixel image with values
+    ranging between 0 and 255
+    
+    ```q
+    q)\l mnist.q
+    [down]loading handwritten-digit data set
+    q)`X`Xt`y`yt set' mnist`X`Xt`y`yt;
+    q)X:1000#'X;y:1000#y;
+    q)X%:255f;Xt%:255f
+    ```
+-   The plotting utility allows us to visualize the images
+    
+    ```q
+    q)plt:value .ut.plot[28;14;.ut.c10;avg] .ut.hmap flip 28 cut
+    q)-1 (,'/) plt each X@\:/: -3?count X 0;
+    
+    
+    
+                                                                                          :-   
+                         .=#%@@x.          .    :=:=%@#-.-::x%:                         -%@%   
+                       :x@%+--#+.              =@@@@@@@@@@@@@@:              .=:       =@%-    
+                    -+%#=. .::               -%@@#=--:---:x@@@-             :%%-     .#@=      
+                   x@%- -:x@@%.              .xx:      :%@@@+.             #@@=--...-@@:       
+                   =@@%@@@@@x                        .x@@@x.             +@@@@@@%%%@@@=        
+                        :@@=                       .x@@@#-              #@#:-     :%@:         
+                       :@@+                      .x@@@#-                         =%@-          
+                      +@@+                      x@@@%-                          -#x.           
+                     x@@:                     +@@@%:                                           
+                     -:.                     -:::-                                             
+    ```
+
+
+## Neural Network Example
+
+-   100 rounds of gradient descent
+    
+    ```q
+    q)Y:.ml.diag[(1+max y)#1f]@\:y
+    q)n:0N!"j"$.ut.nseq[2;count X;count Y]
+    784 397 10
+    q)theta:2 raze/ THETA:.ml.glorotu'[1+-1_n;1_n];
+    q)rf:.ml.l2[1f];
+    q)hgolf:`h`g`o`l!`.ml.sigmoid`.ml.dsigmoid`.ml.sigmoid`.ml.logloss
+    q)theta:first .fmincg.fmincg[100;.ml.nncostgrad[rf;n;hgolf;Y;X];theta];
+    Iteration 100 | cost: 0.5257291
+    q)avg yt=p:.ml.imax .ml.pnn[hgolf;Xt] .ml.nncut[n] theta
+    0.8722
+    ```
+-   The confusion matrix is intuitive
+    
+    ```q
+    q).ut.totals[`TOTAL] .ml.cm[yt;"i"$p]
+    y| 0    1    2    3   4   5   6   7    8   9    TOTAL
+    -| --------------------------------------------------
+    0| 942  0    6    1   0   10  13  5    3   0    980  
+    1| 0    1096 4    1   0   3   2   1    27  1    1135 
+    2| 11   13   899  13  9   3   19  16   40  9    1032 
+    3| 3    3    37   785 3   107 4   16   42  10   1010 
+    4| 1    4    5    1   842 1   20  1    10  97   982  
+    5| 13   5    10   30  20  730 18  12   34  20   892  
+    6| 12   4    21   0   9   30  877 1    4   0    958  
+    7| 4    17   30   13  8   7   1   915  0   33   1028 
+    8| 21   14   6    17  15  43  21  16   793 28   974  
+    9| 13   5    5    17  43  13  1   60   9   843  1009 
+     | 1020 1161 1023 878 949 947 976 1043 962 1041 10000
+    ```
+
+
+# Content-Based/Collaborative Filtering (Recommender Systems)
+
+
+## Generating Personal Movie Ratings
+
+-   Loading the MovieLens data set
+    
+    ```q
+    q)\l mlens.q
+    [down]loading latest movielens data set
+    "unzip -n ml-latest-small.zip"
+    ```
+-   Append personal ratings
+    
+    ```q
+    q)r:1!select `mlens.movie$movieId,rating:0n from mlens.movie
+    q)r,:([]movieId:173 208 260 435 1197 2005 1968i;rating:.5 .5 4 .5 4 4 4f)
+    q)r,:([]movieId:2918 4006 53996 69526 87520 112370i;rating:5 5 4 4 5 5f)
+    q)select movieId,rating,movieId.title from r where not null rating
+    movieId rating title                                
+    ----------------------------------------------------
+    173     0.5    "Judge Dredd"                        
+    208     0.5    "Waterworld"                         
+    260     4      "Star Wars: Episode IV - A New Hope" 
+    435     0.5    "Coneheads"                          
+    1197    4      "Princess Bride, The"                
+    1968    4      "Breakfast Club, The"                
+    2005    4      "Goonies, The"                       
+    2918    5      "Ferris Bueller's Day Off"           
+    4006    5      "Transformers: The Movie"            
+    53996   4      "Transformers"                       
+    69526   4      "Transformers: Revenge of the Fallen"
+    87520   5      "Transformers: Dark of the Moon"     
+    112370  5      "Transformers: Age of Extinction"    
+    ```
+
+
+## Content-Based Filtering Fitting
+
+-   Assume that each movie can be described by a list of boolean
+    flags indicating which genre the movie is in
+-   Building a matrix of these flags allows us to use linear regression
+    
+    ```q
+    q)Y:value[r]1#`rating
+    q)X:"f"$flip genre in/: value[mlens.movie]`genres
+    q)theta:first 0N!THETA:(1;1+count X)#0f
+    ,0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0f
+    q)rf:.ml.l2[.1]
+    q)theta:first .fmincg.fmincg[20;.ml.lincostgrad[rf;Y;X];theta]
+    Iteration 20 | cost: 8.972662e-05
+    ```
+-   Theta coefficients describe my genre preferences
+    
+    ```q
+    q){(5#x),-5#x}desc genre!1_theta
+    1980    | 1.772478
+    2010    | 1.546712
+    1970    | 0.6938292
+    Comedy  | 0.408703
+    Sci-Fi  | 0.4022778
+    Children| -0.2086186
+    Romance | -0.2254342
+    Drama   | -0.4333146
+    Fantasy | -0.8020893
+    1990    | -2.581026
+    ```
+
+
+## Content-Based Filtering Prediction
+
+-   Scores are generated by multiplying my preferences by the genres
+    
+    ```q
+    q)r:update score:first .ml.plin[X;enlist theta] from r
+    ```
+-   Highest recommendations actually score higher than 5
+    
+    ```q
+    q)select[5;>score] movieId,score,movieId.title from r
+    movieId score    title                             
+    ---------------------------------------------------
+    85261   5.680565 "Mars Needs Moms"                 
+    92681   5.521147 "Journey 2: The Mysterious Island"
+    81564   5.442022 "Megamind"                        
+    4121    5.441443 "Innerspace"                      
+    8633    5.441443 "Last Starfighter, The"           
+    ```
+-   Highest recommendations 'check all the boxes'
+    
+    ```q
+    q)select[5;>score] movieId.genres from r
+    genres                                                             
+    -------------------------------------------------------------------
+    `genre$`Action`Adventure`Animation`Children`Comedy`Sci-Fi`IMAX`2010
+    `genre$`Action`Adventure`Comedy`Sci-Fi`IMAX`2010                   
+    `genre$`Action`Animation`Children`Comedy`Sci-Fi`IMAX`2010          
+    `genre$`Action`Adventure`Comedy`Sci-Fi`1980                        
+    `genre$`Action`Adventure`Comedy`Sci-Fi`1980                        
+    ```
+
+
+## User-User Collaborative Filtering
+
+-   Build a user/movie matrix and demean each user to remove biases
+    
+    ```q
+    q)n:20
+    q)m:exec distinct movieId from rating where n<(count;i) fby movieId
+    q)R:value exec (movieId!rating) m by userId from rating where movieId in m
+    q)R,:r[([]movieId:m);`rating]
+    q)U:R-au:avg each R
+    ```
+-   Recommendations are generated using KNN to average the ratings of
+    the k 'closest' users
+    
+    ```q
+    q)k:30
+    q)p:last[au]+.ml.fknn[1f-;.ml.cordist\:;k;U;0f^U] 0f^last U
+    q)`score xdesc update score:p,movieId.title from ([]movieId:m)#r
+    movieId| rating score    title                      
+    -------| -------------------------------------------
+    1967   |        5.117033 "Labyrinth"                
+    475    |        4.761649 "In the Name of the Father"
+    1276   |        4.470915 "Cool Hand Luke"           
+    2067   |        4.470915 "Doctor Zhivago"           
+    2968   |        4.421184 "Time Bandits"             
+    2918   | 5      4.403138 "Ferris Bueller's Day Off" 
+    908    |        4.346668 "North by Northwest"       
+    71535  |        4.279887 "Zombieland"               
+    8874   |        4.279887 "Shaun of the Dead"        
+    ```
+
+
+## Item-Item Collaborative Filtering
+
+-   User ratings are sparse and subject to frequent changes
+-   Item ratings have more support and are more stable
+-   Item (instead of user) biases are removed
+    
+    ```q
+    q)I-:ai:avg each I:flip R
+    ```
+-   Recommendations are generated using KNN to average our own rating
+    of each movie's k most similar movies
+    
+    ```q
+    q)D:((0^I) .ml.cosdist\:) peach 0^I
+    q)p:ai+.ml.knn[1f-;k;last each I] D
+    q)`score xdesc update score:p,movieId.title from ([]movieId:m)#r
+    movieId| rating score    title                                            
+    -------| -----------------------------------------------------------------
+    912    |        5.39     "Casablanca"                                     
+    926    |        5.379167 "All About Eve"                                  
+    908    |        5.334211 "North by Northwest"                             
+    356    |        5.314134 "Forrest Gump"                                   
+    1262   |        5.277907 "Great Escape, The"                              
+    1207   |        5.27069  "To Kill a Mockingbird"                          
+    720    |        5.242593 "Wallace & Gromit: The Best of Aardman Animation"
+    899    |        5.224468 "Singin' in the Rain"                            
+    1247   |        5.213291 "Graduate, The"                                  
+    1148   |        5.185714 "Wallace & Gromit: The Wrong Trousers"           
+    ```
+
+
+## Matrix Decomposition Collaborative Filtering Algorithm
+
+-   The null-riddled rating matrix cannot be decomposed with SVD
+-   Alternatives include Gradient Descent, Stochastic Gradient
+    Descent and Alternating Least Squares (ALS).
+-   ALS elegantly transforms a non-convex problem into an iterative
+    quadratic problem
+
+```q
+/ ALS-WR (a)lternating (l)east (s)quares with (w)eighted (r)egularization
+alswr:{[l2;Y;XTHETA]
+ X:flip f2nd[wridge[l2;;XTHETA 1]] Y; / hold THETA constant, solve for X
+ THETA:flip wridge[l2;;X] peach Y;    / hold X constant, solve for THETA
+ (X;THETA)}
+```
+
+
+## Matrix Decomposition Collaborative Filtering Example
+
+-   Perform regularized ALS until cost is below supplied threshold
+    
+    ```q
+    q)nf:10;
+    q)n:(ni:count U 0;nu:count U)
+    q)XTHETA:(X:-1+ni?/:nf#1f;THETA:-1+nu?/:nf#2f)
+    q)XTHETA:first .ml.iter[1;.0001;.ml.cfcost[();U] .;.ml.alswr[.01;U]] XTHETA
+    iter: 144 | cost: 8.349892 | pct: 9.952313e-05
+    ```
+-   Recommendations are generated by combining item and user exposure
+    matrices
+    
+    ```q
+    q)P:au+.ml.pcf . XTHETA
+    q)show t:`score xdesc update score:last P,movieId.title from ([]movieId:m)#r
+    movieId| rating score    title                                                
+    -------| ---------------------------------------------------------------------
+    4232   |        9.907802 "Spy Kids"                                           
+    102903 |        9.573078 "Now You See Me"                                     
+    3869   |        8.985205 "Naked Gun 2 1/2: The Smell of Fear, The"            
+    265    |        8.948548 "Like Water for Chocolate (Como agua para chocolate)"
+    84954  |        8.573156 "Adjustment Bureau, The"                             
+    116823 |        8.445161 "The Hunger Games: Mockingjay - Part 1"              
+    53121  |        8.140992 "Shrek the Third"                                    
+    6942   |        7.996043 "Love Actually"                                      
+    ```
+
+
+# Google PageRank
+
+
+## Google PageRank Algorithm
+
+-   The PageRank algorithm relies on page links (not content)
+-   Links (like citations) provide evidence of relative importance
+-   The PageRank algorithm adds 'random surfing'
+    
+    ```q
+    / given a (d)amping factor (1 - the probability of random surfing) and the
+    / (A)djacency matrix, create the Markov Google matrix
+    google:{[d;A]
+     M:A%1f|s:sum each A;           / convert to Markov matrix
+     M+:(0f=s)%n:count M;           / add links to dangling pages
+     M:(d*M)+(1f-d)%n;              / dampen
+     M}
+    ```
+-   The Google Matrix is a transition matrix with random surfing
+    
+    ```q
+    q).ml.google[.85] (10110b;11001b;01110b;00111b;00000b)
+    0.3133333 0.03      0.3133333 0.3133333 0.03     
+    0.3133333 0.3133333 0.03      0.03      0.3133333
+    0.03      0.3133333 0.3133333 0.3133333 0.03     
+    0.03      0.03      0.3133333 0.3133333 0.3133333
+    0.2       0.2       0.2       0.2       0.2      
+    ```
+
+
+## Google PageRank Example
+
+-   Generate page links
+    
+    ```q
+    q)i:1 1 2 2 3 3 3 4 6
+    q)j:2 6 3 4 4 5 6 1 1
+    ```
+-   Enumerate links and create a sparse matrix
+    
+    ```q
+    q)node:asc distinct raze l
+    q)l:node?l
+    q)show S:(1 2#1+max over l), .ml.prepend[1f] l
+    6 6
+    1 1 1 1 1 1 1 1 1f
+    0 0 1 1 2 2 2 3 5
+    1 5 2 3 3 4 5 0 0
+    ```
+-   Iteratively apply transition matrix until convergence
+    
+    ```q
+    q)node[i]!r i:idesc r:.ml.pageranks[d;S] over r:n#1f%n:S[0;0]
+    1| 0.3210169
+    6| 0.200744
+    2| 0.170543
+    4| 0.1367926
+    3| 0.1065916
+    5| 0.0643118
+    ```
+
+
+# Sparklines
+
+
+## Sparkline Algorithm
+
+> A sparkline is a small intense, simple, word-sized graphic with
+> typographic resolution. &#x2013; Edward Tufte
+
+-   Bucket all values into 8 bins
+-   Map bins to 8 Unicode characters
+
+```q
+/ allocate x into n bins
+nbin:{[n;x](n-1)&floor n*.5^x%max x-:min x}
+
+/ generate unicode sparkline
+spark:raze("c"$226 150,/:129+til 8)nbin[8]::
+```
+
+
+## Sparkline Example
+
+-   Load sample DJIA data set
+    
+    ```q
+    q)\l dji.q
+    [down]loading dji data set
+    q)dji.t
+    quarter stock date       open  high  low   close volume    percent_change_price percent_change_vo..
+    -------------------------------------------------------------------------------------------------..
+    1       AA    2011.01.07 15.82 16.72 15.78 16.42 239655616 3.79267                               ..
+    1       AA    2011.01.14 16.71 16.71 15.64 15.97 242963398 -4.42849             1.380223         ..
+    1       AA    2011.01.21 16.19 16.38 15.6  15.79 138428495 -2.47066             -43.02496        ..
+    1       AA    2011.01.28 15.87 16.63 15.82 16.13 151379173 1.63831              9.3555           ..
+    1       AA    2011.02.04 16.18 17.39 16.18 17.14 154387761 5.93325              1.987452         ..
+    ..
+    ```
+-   Use q-sql to conveniently access `close` and `stock` columns
+    
+    ```q
+    q)-1@'10#exec ((4$string stock 0),": ",.ut.spark close) by stock from dji.t;
+    AA  : ▅▄▃▄▇▇▇▅▅▄▄▆▇█▅▆▆▇▆▄▅▃▂▁▂
+    AXP : ▁▃▃▁▁▄▃▁▁▁▁▃▂▃▃▄▆▇▇██▇▅▆▆
+    BA  : ▁▁▂▁▂▃▃▃▃▂▁▄▄▄▃▅███▇▆▅▃▄▂
+    BAC : ▇█▇▆▇██▇▇▇▆▅▅▆▄▄▃▄▃▂▂▂▁▁▁
+    CAT : ▁▁▁▂▃▄▅▄▄▃▅▆█▇▆▆█▇▅▅▅▃▂▂▃
+    CSCO: ▇█▇▇█▅▅▅▄▄▃▃▃▄▃▃▃▃▃▂▂▂▁▁▁
+    CVX : ▁▁▂▁▃▃▄▅▆▄▆▇██▇██▆▅▅▆▅▄▄▃
+    DD  : ▂▂▁▂▄▆█▆▆▅▅▆▇▇▇██▆▅▅▄▂▂▂▄
+    DIS : ▃▃▃▂▅█████▅██▆▆▇██▆▆▆▃▂▁▁
+    GE  : ▂▂▅▆▆██▇▆▆▃▅▆▆▅▅▆▅▅▄▄▂▁▂▁
+    ```
+
+
+# Thank You
+
+> Never, ever underestimate the importance of having fun &#x2013; Randy Pausch
+
+
+<!----- Footnotes ----->
+
