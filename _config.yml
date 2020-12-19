@@ -89,6 +89,9 @@ author:
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook"
       url: "https://www.facebook.com/nick.psaris/"
+    - label: "Amazon"
+      icon: "fab fa-fw fa-amazon"
+      url: "https://www.amazon.com/Nick-Psaris/e/B00W7R5QD0"
 
 footer:
   links:
@@ -107,6 +110,9 @@ footer:
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook"
       url: "https://www.facebook.com/nick.psaris/"
+    - label: "Amazon"
+      icon: "fab fa-fw fa-amazon"
+      url: "https://www.amazon.com/Nick-Psaris/e/B00W7R5QD0"
 
 defaults:
   # all
