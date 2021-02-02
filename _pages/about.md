@@ -47,10 +47,11 @@ clients using collaborative filtering.
 Beginning in 2018, Nick has been co-teaching the [Market
 Microstructure and Algorithmic
 Trading](https://www.cmu.edu/mscf/academics/curriculum/46982-market-microstructure-and-algorithmic-trading.html)
-class for Carnegie Mellon University's 
-[MSCF](https://www.cmu.edu/mscf/) program.  Students use
-[kdb+](https://kx.com/) and [jupyter](https://jupyter.org/) notebooks
-to analyze high-frequency tick data sourced from NYSE [Daily
+class for Carnegie Mellon University's
+[MSCF](https://www.cmu.edu/mscf/) program as an [adjunct
+professor](https://www.cmu.edu/mscf/academics/faculty.html).  Students
+use [kdb+](https://kx.com/) and [jupyter](https://jupyter.org/)
+notebooks to analyze high-frequency tick data sourced from NYSE [Daily
 TAQ](https://www.nyse.com/market-data/historical/daily-taq).
 
 # Fun Q
