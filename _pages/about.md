@@ -3,11 +3,21 @@ permalink: /about/
 title: "About"
 ---
 
-Nick Psaris is a seasoned quantitative developer with experience
-building automated option market making and equity statarb backtesting
-and trading systems.  He has written two books [Q
-Tips](http://q-tips.net) and [Fun Q](http://fun-q.net) to share his
-passion for q/kdb+ and machine learning.
+Nick Psaris is a quantitative developer with over two decades of
+experience building automated option market making and equity statarb
+backtesting and trading systems as well as data and analytic
+platforms. He is a CFA charterholder and holds a Masters in
+Computational Finance (MSCF) from the Tepper School of Business at
+Carnegie Mellon University. Nick wrote [Q Tips: Fast, Scalable and
+Maintainable Kdb+](http://q-tips.net) based on his years of practical
+experience developing production trading systems in q. His second
+book, [Fun Q: A Functional Introduction to Machine Learning in
+Q](http://fun-q.net), uses the expressive q language to guide readers
+through implementing twelve machine learning algorithms from
+scratch. Nick is currently an adjunct professor for the Market
+Microstructure and Algorithmic Trading class at Carnegie Mellon's MSCF
+program and a Managing Director in Bank of America's Data and
+Innovation Group.
 
 # New York I
 After graduating [Duke University](http://www.duke.edu) with a degree
