@@ -62,7 +62,10 @@ class for Carnegie Mellon University's
 professor](https://www.cmu.edu/mscf/academics/faculty.html).  Students
 use [kdb+](https://kx.com/) and [jupyter](https://jupyter.org/)
 notebooks to analyze high-frequency tick data sourced from NYSE [Daily
-TAQ](https://www.nyse.com/market-data/historical/daily-taq).
+TAQ](https://www.nyse.com/market-data/historical/daily-taq), CME
+[DataMine](https://www.cmegroup.com/confluence/display/EPICSANDBOX/CME+DataMine),
+and ICE
+[Cryptocurrencies](https://www.theice.com/market-data/cryptocurrencies).
 
 # Fun Q
 Combining his love of data and efficient q algorithms, Nick published
