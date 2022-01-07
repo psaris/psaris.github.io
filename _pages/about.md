@@ -92,6 +92,12 @@ Nick has been a panelist on a few of [The Array Cast](https://www.arraycast.com/
 - [What is an Array](https://www.arraycast.com/episodes/episode-03-what-is-an-array)
 - [Responding to a Listener's Email](https://www.arraycast.com/episodes/episode-04-responding-to-listeners-email)
 
+# In The News
+Nick has been mentioned in reference to the Q programming language on [efinancialcareers](https://www.efinancialcareers.com/).
+
+- [The coding language that will get you the best jobs in banking](https://www.efinancialcareers.com/news/2020/09/best-coding-language-for-banking-jobs)
+- [Why so few people learn the hottest coding language in finance](https://www.efinancialcareers.com/news/2020/10/kdb-finance-jobs)
+
 # Emacs
 Nick uses Emacs in all parts of his life.  He is the author of
 [q-mode](https://melpa.org/#/q-mode), which adds syntax highlighting to
