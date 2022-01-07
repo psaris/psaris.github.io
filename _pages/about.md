@@ -85,6 +85,13 @@ To promote interest in q, Nick has lead a few coding competitions.
 - [Loading Data from the MNIST Database](https://kx.com/blog/kxcon2016-puzzle-challenge/)
 - [Compute the Mastermind Score](https://kx.com/blog/kdb-mastermind-challenge/)
 
+# Podcasts
+Nick has been a panelist on a few of [The Array Cast](https://www.arraycast.com/) episodes.
+
+- [What Challenges Face the Array Languages](https://www.arraycast.com/episodes/episode-02-challenges-facing-the-array-languages)
+- [What is an Array](https://www.arraycast.com/episodes/episode-03-what-is-an-array)
+- [Responding to a Listener's Email](https://www.arraycast.com/episodes/episode-04-responding-to-listeners-email)
+
 # Emacs
 Nick uses Emacs in all parts of his life.  He is the author of
 [q-mode](https://melpa.org/#/q-mode), which adds syntax highlighting to
