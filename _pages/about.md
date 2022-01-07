@@ -1,6 +1,8 @@
 ---
 permalink: /about/
 title: "About"
+toc: true
+toc_sticky: true
 ---
 
 Nick Psaris is a quantitative developer with over two decades of
