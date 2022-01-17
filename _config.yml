@@ -130,7 +130,7 @@ defaults:
       type: posts
     values:
       toc: true
-      toc_label: Contents
+      toc_sticky: true
       layout: single
       read_time: false
       comments: true
