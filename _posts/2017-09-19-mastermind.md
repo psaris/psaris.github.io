@@ -423,7 +423,8 @@ The solution is vector indexing.
     ..
     ```
 
-== Algorithm Comparison
+
+# Algorithm Comparison
 
 With the speed improvement gained through caching the scoring
 function, we can now traverse all paths and see which algorithm takes
