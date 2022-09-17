@@ -1,0 +1,21 @@
+#+COMMENT: -*- mode: org; mode:flyspell -*-
+
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+OPTIONS: email:t f:t inline:t num:nil p:nil pri:nil prop:nil
+#+OPTIONS: stat:t tags:t tasks:t tex:t timestamp:nil title:t toc:nil
+#+OPTIONS: todo:t |:t
+#+OPTIONS: html-postamble:nil
+#+JEKYLL_TAGS: wordle
+#+JEKYLL_CATEGORIES: Video
+
+#+TITLE: Wordle
+#+SUBTITLE: Referenced in KX Insiders
+#+DATE: <2022-02-23 Wed>
+#+AUTHOR: Nick Psaris
+#+EMAIL: nick@vector-sigma.com
+
+
+* Video
+
+  Nick's [[https://github.com/psaris/wordle][Wordle solver]] was demonstrated in [[https://www.youtube.com/watch?v=u_XWba9uA3o][KX Insiders Episode 4]].
