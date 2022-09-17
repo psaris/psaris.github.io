@@ -18,8 +18,8 @@ Q](http://fun-q.net), uses the expressive q language to guide readers
 through implementing twelve machine learning algorithms from
 scratch. Nick is currently an adjunct professor for the Market
 Microstructure and Algorithmic Trading class at Carnegie Mellon's MSCF
-program and a Managing Director in Bank of America's Data and
-Innovation Group.
+program and a Managing Director in Bank of America's Equity Central
+Risk Book (CRB) desk.
 
 # New York I
 After graduating [Duke University](http://www.duke.edu) with a degree
@@ -50,10 +50,12 @@ charting. As each new topic is introduced, tips are highlighted to
 help you write better q.
 
 # New York II
-In 2016, Nick moved back to New York and joined his firm's Central
-Risk Book desk where he built the data and analytics platform using q.
-Most recently, Nick built a client interest model for institutional
-clients using collaborative filtering.
+In 2016, Nick moved back to New York and joined his firm's Equity CRB
+desk where he manages the data and analytics platform built with q.
+Most recently, Nick built the
+[PREDICTIFY](https://uspto.report/TM/90681330) cross-asset client
+interest model using a collaborative filtering machine learning
+algorithm.
 
 # MSCF
 Beginning in 2018, Nick has been co-teaching the [Market
