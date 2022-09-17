@@ -1,0 +1,21 @@
+#+COMMENT: -*- mode: org; mode:flyspell -*-
+
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+OPTIONS: email:t f:t inline:t num:nil p:nil pri:nil prop:nil
+#+OPTIONS: stat:t tags:t tasks:t tex:t timestamp:nil title:t toc:nil
+#+OPTIONS: todo:t |:t
+#+OPTIONS: html-postamble:nil
+#+JEKYLL_TAGS: arraycast
+#+JEKYLL_CATEGORIES: Podcast
+
+#+TITLE: What is an Array
+#+SUBTITLE: Panelist on The Array Cast Podcast
+#+DATE: <2021-06-26 Sat>
+#+AUTHOR: Nick Psaris
+#+EMAIL: nick@vector-sigma.com
+
+
+* Podcast
+  
+[[https://www.arraycast.com/episodes/episode-03-what-is-an-array][Episode Four of The Array Cast Podcast]]
