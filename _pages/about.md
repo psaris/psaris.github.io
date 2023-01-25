@@ -122,4 +122,4 @@ addition to
 for pediatric cancer research by [shaving
 bald](https://www.stbaldricks.org/participants/nickgoesbald) at the
 annual [St. Baldrick's event in Hong
-Kong](https://www.stbaldricks.org/events/hkis).
+Kong](https://www.stbaldricks.org/events/hkis2023) and has joined the ranks of: Knight of the Bald Table.
