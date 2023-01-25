@@ -90,11 +90,12 @@ To promote interest in q, Nick has lead a few coding competitions.
 - [Compute the Mastermind Score](https://kx.com/blog/kdb-mastermind-challenge/)
 
 # Podcasts
-Nick has been a panelist on a few of [The Array Cast](https://www.arraycast.com/) episodes.
+Nick has been a panelist and guest on the [The Array Cast](https://www.arraycast.com/) podcast.
 
 - [What Challenges Face the Array Languages](https://www.arraycast.com/episodes/episode-02-challenges-facing-the-array-languages)
 - [What is an Array](https://www.arraycast.com/episodes/episode-03-what-is-an-array)
 - [Responding to a Listener's Email](https://www.arraycast.com/episodes/episode-04-responding-to-listeners-email)
+- [Nick Psaris and the q Language](https://www.arraycast.com/episodes/episode42-nick-psaris-q)
 
 # In The News
 Nick has been mentioned in reference to the Q programming language on [efinancialcareers](https://www.efinancialcareers.com/).
@@ -120,5 +121,5 @@ addition to
 [mission](https://thed10.com/our-mission), he has raised over $100,000
 for pediatric cancer research by [shaving
 bald](https://www.stbaldricks.org/participants/nickgoesbald) at the
-annual [St. Baldricks event in Hong
+annual [St. Baldrick's event in Hong
 Kong](https://www.stbaldricks.org/events/hkis).
