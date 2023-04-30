@@ -1,6 +1,6 @@
 ---
 title: "Parsing the MNIST Data Set"
-excerpt: "Presented at KxCon2016"
+excerpt: "Presented at KXCon 2016"
 date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2016-05-22 Sun&gt;</span></span>
 categories: 
 - Competition

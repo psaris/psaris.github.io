@@ -10,7 +10,7 @@
 #+JEKYLL_CATEGORIES: Competition
 
 #+TITLE: Parsing the MNIST Data Set
-#+SUBTITLE: Presented at KxCon2016
+#+SUBTITLE: Presented at KXCon 2016
 #+DATE: <2016-05-22 Sun>
 #+AUTHOR: Nick Psaris
 #+EMAIL: nick@vector-sigma.com
