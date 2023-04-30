@@ -10,7 +10,7 @@
 #+JEKYLL_CATEGORIES: Presentation
 
 #+TITLE: Decision Trees in Q: From Stump to Forest
-#+SUBTITLE: Presented at KxCon25
+#+SUBTITLE: Presented at KX25
 #+DATE: <2018-05-18 Fri 11:20>
 #+AUTHOR: Nick Psaris
 #+EMAIL: nick@vector-sigma.com

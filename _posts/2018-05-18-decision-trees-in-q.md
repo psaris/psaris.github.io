@@ -1,6 +1,6 @@
 ---
 title: "Decision Trees in Q: From Stump to Forest"
-excerpt: "Presented at KxCon25"
+excerpt: "Presented at KX25"
 date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2018-05-18 Fri 11:20&gt;</span></span>
 categories: 
 - Presentation
