@@ -119,7 +119,7 @@ Nick is passionate about finding a cure for childhood cancer.  In
 addition to
 [supporting](https://thed10.com/blog/j-s-bulls-why-we-do-this-in-the-first-place)
 [The D10](https://thed10.com/)
-[mission](https://thed10.com/our-mission), he has raised over $100,000
+[mission](https://thed10.com/our-mission), he has raised over $150,000
 for pediatric cancer research by [shaving
 bald](https://www.stbaldricks.org/participants/nickgoesbald) at the
 annual [St. Baldrick's event in Hong
