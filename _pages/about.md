@@ -96,6 +96,7 @@ Nick has been a panelist and guest on the [The Array Cast](https://www.arraycast
 - [What is an Array](https://www.arraycast.com/episodes/episode-03-what-is-an-array)
 - [Responding to a Listener's Email](https://www.arraycast.com/episodes/episode-04-responding-to-listeners-email)
 - [Nick Psaris and the q Language](https://www.arraycast.com/episodes/episode42-nick-psaris-q)
+- [KxCon 23](https://www.arraycast.com/episodes/episode54-kxcon23)
 
 # In The News
 Nick has been mentioned in reference to the Q programming language on [efinancialcareers](https://www.efinancialcareers.com/).
