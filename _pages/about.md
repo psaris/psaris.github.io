@@ -47,7 +47,10 @@ experience developing production trading systems in q. Published in
 know to build a fully functional CEP engine. Advanced topics include
 profiling an active kdb+ server, derivatives pricing and histogram
 charting. As each new topic is introduced, tips are highlighted to
-help you write better q.
+help you write better q. A [book
+review](https://vector.org.uk/book-review-q-tips-fast-scalable-and-maintainable-kdb-2/)
+was published in [Vector](https://vector.org.uk/), the Journal of the
+British APL Association.
 
 # New York II
 In 2016, Nick moved back to New York and joined his firm's Equity CRB
@@ -79,7 +82,10 @@ efficiently implemented in q -- thus bringing the code to the data,
 instead of the data to the code.  Each algorithm is broken into its
 basic building blocks and then rebuilt from scratch.  Famous
 machine-learning data sets are used to motivate each chapter as
-advanced q idioms are introduced as well.
+advanced q idioms are introduced as well.  A [book
+review](https://vector.org.uk/book-review-fun-q-a-functional-introduction-to-machine-learning-in-q/)
+was published in [Vector](https://vector.org.uk/), the Journal of the
+British APL Association.
 
 # Competitions
 To promote interest in q, Nick has lead a few coding competitions.
