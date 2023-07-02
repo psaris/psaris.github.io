@@ -30,6 +30,8 @@
 #+reveal_root: https://cdn.jsdelivr.net/npm/reveal.js
 #+reveal_hlevel: 1
 
+* Recorded Presentation
+[[https://kx.com/videos/kx-con-23-matching-algorithms-in-q-an-interactive-presentation/][Matching Algorithms in q – An Interactive Presentation]]
 * Motivation
   - Intern-desk pairing
   - Two distinct populations

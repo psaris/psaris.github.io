@@ -12,6 +12,7 @@ tags:
 
 # Table of Contents
 
+-   [Recorded Presentation](#org9e0bdbf)
 -   [Motivation](#org4ea8e77)
 -   [Demonstration](#orgbedbb4e)
 -   [Stable Marriage (SM) Problem](#orgb58cedf)
@@ -21,6 +22,13 @@ tags:
 -   [Performance](#orgb1ae470)
 -   [Q Enhancements](#org979c310)
 -   [Summary](#org5569ac5)
+
+
+<a id="org9e0bdbf"></a>
+
+# Recorded Presentation
+
+[Matching Algorithms in q – An Interactive Presentation](https://kx.com/videos/kx-con-23-matching-algorithms-in-q-an-interactive-presentation/)
 
 
 <a id="org4ea8e77"></a>
