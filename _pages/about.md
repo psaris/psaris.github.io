@@ -156,7 +156,9 @@ Nick is passionate about finding a cure for childhood cancer.  In
 addition to [supporting][jsbulls] [The D10][] [mission][d10 mission],
 he has raised over $150,000 for pediatric cancer research by [shaving
 bald][] at the annual [St. Baldrick's event in Hong Kong][] and has
-joined the ranks of: [Knight of the Bald Table][].
+joined the ranks of [Knight of the Bald Table][]: [2015][], [2016][],
+[2018][], [2019][], [2020][], [2021][], [2022][] [2023][], and
+[2024][].
 
 [jsbulls]: https://thed10.com/blog/j-s-bulls-why-we-do-this-in-the-first-place
     "Why J's Bulls Support Pediatric Cancer"
@@ -167,5 +169,14 @@ joined the ranks of: [Knight of the Bald Table][].
     "St. Baldrick's Event in Hong Kong"
 [knight of the bald table]: https://www.stbaldricks.org/league
     "St. Baldrick's League of Legendary Heroes"
+[2015]: https://www.stbaldricks.org/participants/nickgoesbald2015
+[2016]: https://www.stbaldricks.org/participants/nickgoesbald2016
+[2018]: https://www.stbaldricks.org/participants/nickgoesbald2018
+[2019]: https://www.stbaldricks.org/participants/nickgoesbald2019
+[2020]: https://www.stbaldricks.org/participants/nickgoesbald2020
+[2021]: https://www.stbaldricks.org/participants/nickgoesbald2021
+[2022]: https://www.stbaldricks.org/participants/nickgoesbald2022
+[2023]: https://www.stbaldricks.org/participants/nickgoesbald2023
+[2024]: https://www.stbaldricks.org/participants/nickgoesbald
 
 
