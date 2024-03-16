@@ -1,8 +1,8 @@
 #+comment: -*- mode: org; mode:flyspell -*-
 
-#+title: Matching Algorithms in Q
-#+subtitle: Presented at KxCon 2023
-#+date: <2023-05-19>
+#+title: Improved Matching Algorithms in Q
+#+subtitle: Presented w/ Kdb+ 4.1 Enhancements at Hong Kong Meetup
+#+date: <2024-02-28>
 #+author: Nick Psaris
 #+email: nick@vector-sigma.com
 #+jekyll_tags: matching funq marriage
@@ -30,8 +30,8 @@
 #+reveal_root: https://cdn.jsdelivr.net/npm/reveal.js
 #+reveal_hlevel: 1
 
-* Recorded Presentation
-[[https://kx.com/videos/kx-con-23-matching-algorithms-in-q-an-interactive-presentation/][Matching Algorithms in q – An Interactive Presentation]]
+* Meetup Details
+  [[https://go.marketing.kx.com/HK-Meetup-Feb-24][2024-02-28 Hong Kong Meetup]]
 * Motivation
   - Intern-desk pairing
   - Two distinct populations
@@ -40,9 +40,50 @@
   - Prevent back-room deals
   - Is there a single optimal pairing?
 
-* Demonstration
+* Simple Example
+  - Use Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#dictionary-literal-syntax][dictionary literal syntax]] to build suitor and
+    reviewer preferences as well as engagement dictionary
+  #+begin_src q
+    q)show S:([A:`D`E`F;B:`D`F`E;C:`F`D`E]) / suitor preferences
+    A| D E F
+    B| D F E
+    C| F D E
+    q)show R:([D:`B`C`A;E:`A`C`B;F:`C`B`A]) / reviewer preferences
+    D| B C A
+    E| A C B
+    F| C B A
+    q)show E:([A:`E;B:`D;C:`F])             / engagements
+    A| E
+    B| D
+    C| F
+  #+end_src
+  - Confirm algorithm produces optimal engagements
+  #+begin_src q
+    q)E~first .matching.sm[S;R]
+    1b
+  #+end_src
+* Dictionary Literal Digression
+  - Intuitively extends the table and list syntax
+    #+begin_src q
+      q)([a:1;b:2])
+      a| 1
+      b| 2
+    #+end_src
+  - Keys are always symbols and there is no zero-column table
+    #+begin_src q
+      q)0N!([])
+      (`symbol$())!()
+    #+end_src
+  - There is now an elegant way to create a single element dictionary!
+    #+begin_src q
+      q)enlist[`k]!enlist`v
+      k| v
+      q)([k:`v])
+      k| v
+      #+end_src
+* Engagement Demonstration
   - Two sets of index cards
-  - Qgods: 1-9
+  - Qgods: 0-9
   - Qbies: A-J
   - Pair-off so everyone is 'happy'
   - How did we do?
@@ -83,8 +124,8 @@
    - The suitor obtains the best possible match among all stable
      matches
    #+begin_src q
-     q)eSR:.matching.sm[G;B]           / perform qgod-optimal match
-     q)eSR 0                           / engagements
+     q)geSR:.matching.sm[G;B]          / perform qgod-optimal match
+     q)geSR 0                          / engagements
      0| C
      1| G
      2| D
@@ -95,7 +136,7 @@
      7| B
      8| J
      9| F
-     q)eSR 1                           / remaining qgod prefs
+     q)geSR 1                          / remaining qgod prefs
      0| "CEBGH"
      1| "GHJBA"
      2| "DAC"
@@ -111,7 +152,7 @@
    - The reviewer obtains the worst possible match among all stable
      matches
    #+begin_src q
-     q)eSR 0                           / engagements
+     q)geSR 0                          / engagements
      0| C
      1| G
      2| D
@@ -122,7 +163,7 @@
      7| B
      8| J
      9| F
-     q)eSR 2                           / remaining qbie prefs
+     q)geSR 2                          / remaining qbie prefs
      A| "9378126"
      B| "8014967"
      C| "72845390"
@@ -138,8 +179,8 @@
    - Allowing Qbies to propose first improves their matches
    - Matches are still stable
    #+begin_src q
-     q)eSR:.matching.sm[B;G]           / perform qbie-optimal match
-     q)eSR 0                           / engagements
+     q)beSR:.matching.sm[B;G]          / perform qbie-optimal match
+     q)beSR 0                          / engagements
      A| 3
      B| 8
      C| 0
@@ -150,6 +191,64 @@
      H| 7
      I| 4
      J| 9
+   #+end_src
+** Uniqueness
+   - The Qgod-optimal and Qbie-optimal engagements are not always the
+     same
+   - Use Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] to invert the Qbie dictionary
+   #+begin_src q
+     q)geSR[0],'geSR[0] = {[k!v]v!k} beSR 0
+     0| "C" 1b
+     1| "G" 1b
+     2| "D" 1b
+     3| "H" 0b
+     4| "I" 1b
+     5| "E" 1b
+     6| "A" 0b
+     7| "B" 0b
+     8| "J" 0b
+     9| "F" 0b
+   #+end_src
+
+* Roommate Demonstration
+  - One set of index cards
+  - Qroomies: A-J
+  - Pair-off so everyone is 'happy'
+  - How did we do?
+** Qroomie Preferences
+  - Roommates rank everyone else but themselves
+  #+begin_src q
+    q)show R:b!value[G] except' b     / define qroomie prefs
+    A| "ICEBGFDHJ"
+    B| "GHDCJAIEF"
+    C| "HBDJFAEGI"
+    D| "BIFHAGECJ"
+    E| "DICJFHABG"
+    F| "BEHGACDIJ"
+    G| "ACIHEJBDF"
+    H| "GBDEIFACJ"
+    I| "JGEBHADCF"
+    J| "FIGBACHED"
+  #+end_src
+** Qroomie Matches
+   - The first stage of the algorithm can produce multiple solutions
+   - The second stage of the algorithm removes 'cycles'
+   #+begin_src q
+     q)show reR:.matching.sr R
+     "ABCDEFGHIJ"!"GHFEDCABJI"
+     "ABCDEFGHIJ"!("CG";"HD";"FA";"BE";"DF";"EC";"AH";"GB";,"J";,"I")
+     "ABCDEFGHIJ"!(,"G";,"H";,"F";,"E";,"D";,"C";,"A";,"B";,"J";,"I")
+     q)reR 1
+     A| "CG"
+     B| "HD"
+     C| "FA"
+     D| "BE"
+     E| "DF"
+     F| "EC"
+     G| "AH"
+     H| "GB"
+     I| ,"J"
+     J| ,"I"
    #+end_src
 * Stable Marriage (SM) Problem
 
@@ -212,35 +311,37 @@ pair prefers each other over their current matching?
   #+end_src
 
 ** Stable Marriage Wrapper
+   - Use Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] to unpack dictionary parameters
    - Enumerate the suitor and reviewer dictionaries
    - Build all-null engagement vector
-   - Iterator with [[* Stable Marriage Implementation][~.matching.sma~]] until convergence
+   - Iterate with [[* Stable Marriage Implementation][~.matching.sma~]] until convergence
    - Convert enumerations back to dictionaries
 
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B2 -A5 '^sm:' matching.q
+     grep -B2 -A4 '^sm:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
    / given (S)uitor and (R)eviewer preferences, return the (e)ngagement
    / dictionary and remaining (S)uitor and (R)eviewer preferences for inspection
-   sm:{[S;R]
-    us:key S; ur:key R;                      / unique suitors and reviewers
-    eSR:(count[S]#0N;ur?value S;us?value R); / initial state/enumerated values
+   sm:{[sn!sp;rn!rp]
+    eSR:(count[sn]#0N;rn?sp;sn?rp);  / initial state/enumerated values
     eSR:sma over eSR;                / iteratively apply Gale-Shapley algorithm
-    eSR:(us;us;ur)!'(ur;ur;us)@'eSR; / map enumerations back to original values
+    eSR:(sn;sn;rn)!'(rn;rn;sn)@'eSR; / map enumerations back to original values
     eSR}
    #+end_src
 
 ** Stable Marriage Implementation
-   - The first line of every algorithm unpacks its arguments
+   - Manually unpack arguments because ~SR~ may be a single matrix or
+     a pair of matrices
    - The suitor and reviewer indices -- ~Si~ and ~Ri~ respectively --
      are defined as variables so that the same function can be used
      for the [[*Stable Roommates (SR) Problem][Stable Roommates (SR) Problem]]
+   - Use Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] to unpack [[* Pruning Preference Vectors][~.matching.prune~]] results
 
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B4 -A11 '^sma:' matching.q
+     grep -B4 -A10 '^sma:' matching.q
    #+end_src
 
    #+RESULTS:
@@ -250,16 +351,15 @@ pair prefers each other over their current matching?
    / roommate preferences are assumed if (R)eviewer preferences are not
    / provided.
    sma:{[eSR]
-    n:count e:eSR 0;S:eSR Si:1;R:eSR Ri:-1+count eSR;
+    e:eSR 0;S:eSR Si:1;R:eSR Ri:-1+count eSR;   / manually unpack
     mi:?[;1b] 0<count each S w:where null e;    / first unmatched with prefs
     if[mi=count w;:eSR];                        / no unmatched suitor
     rp:R ri:first s:S si:w mi;                  / preferred reviewer's prefs
     if[count[rp]=sir:rp?si;:.[eSR;(Si;si);1_]]; / not on reviewer's list
     / renege if already engaged and this suitor is better
-    if[not n=ei:e?ri;if[sir<rp?ei;eSR:.[eSR;(Si;ei);1_];e[ei]:0N]];
-    e[si]:ri; eSR[0]:e;                      / get engaged
-    eSR[Si]:last rpS:prune[rp;eSR Si;ri;si]; / first replace suitor prefers
-    eSR[Ri;ri]:first rpS;                    / order matters when used for SR
+    if[not count[e]=ei:e?ri;if[sir<rp?ei;eSR:.[eSR;(Si;ei);1_];e[ei]:0N]];
+    e[si]:ri; eSR[0]:e;                         / get engaged
+    (eSR Si;eSR[Ri;ri]):prune[eSR Si;rp;ri;si]; / assignment order matters
     eSR}
    #+end_src
 
@@ -267,19 +367,21 @@ pair prefers each other over their current matching?
    - Once a suitor and reviewer are engaged, we can make two optimizations:
      1. Remove all reviewer preferences that are worse than the current suitor
      2. Remove the reviewer from all worse suitors' preferences
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used yet again to unpack the results
+     of ~cut~
    #+begin_src sh :exports results :results output code :wrap src q
      grep -B2 -A4 '^prune:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
-   / given (r)eviewer (p)refs, (S)uiter preferences and (s)uitor (i)ndice(s) and
-   / (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
-   prune:{[rp;S;ris;sis]
-    if[count[rp]=i:1+max rp?sis;:(rp;S)]; / return early if nothing to do
-    rp:first c:(0;i) cut rp;              / drop worse suitors from preferences
-    S:@[;last c;drop;]/[S;ris];           / drop reviewers from worse suitors
-    (rp;S)}
+   / given (S)uiter preferences, (r)eviewer (p)refs, and (s)uitor (i)ndice(s)
+   / and (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
+   prune:{[S;rp;ris;sis]
+    if[count[rp]<=i:1+max rp?sis;:(S;rp)]; / return early if nothing to do
+    (rp;sis):(0;i) cut rp;                 / drop worse suitors from preferences
+    S:S @[;sis;drop;]/ ris;                / drop reviewers from worse suitors
+    (S;rp)}
    #+end_src
 
 ** Pruning Example
@@ -289,12 +391,12 @@ pair prefers each other over their current matching?
    - Reviewer 4 is removed from the suitors that were cut
    
    #+begin_src q
-     q)rpS:.matching.prune[rp:R ri;S;ri:4;si:0]; / prune
+     q)Srp:.matching.prune[S;rp:R ri;ri:4;si:0]; / prune
      q)show rp                                   / initial reviewer prefs
      7 0 5 1 6 8 4 3 2 9
-     q)show first rpS                            / everything past 0 is cut
+     q)show last Srp                             / everything past 0 is cut
      7 0
-     q)show last rpS                   / 4 is dropped from cut reviewers
+     q)show first Srp                  / 4 is dropped from cut reviewers
      8 2 4 1 6 0 5 3 7 9
      6 7 3 2 9 1 0 8 5
      7 1 3 9 5 0 6 8 2
@@ -324,13 +426,13 @@ pair prefers each other over their current matching?
 
    #+RESULTS:
    #+begin_src q
-   / given (r)eviewer (p)refs, (S)uiter preferences and (s)uitor (i)ndice(s) and
-   / (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
-   prune:{[rp;S;ris;sis]
-    if[count[rp]=i:1+max rp?sis;:(rp;S)]; / return early if nothing to do
-    rp:first c:(0;i) cut rp;              / drop worse suitors from preferences
-    S:@[;last c;drop;]/[S;ris];           / drop reviewers from worse suitors
-    (rp;S)}
+   / given (S)uiter preferences, (r)eviewer (p)refs, and (s)uitor (i)ndice(s)
+   / and (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
+   prune:{[S;rp;ris;sis]
+    if[count[rp]<=i:1+max rp?sis;:(S;rp)]; / return early if nothing to do
+    (rp;sis):(0;i) cut rp;                 / drop worse suitors from preferences
+    S:S @[;sis;drop;]/ ris;                / drop reviewers from worse suitors
+    (S;rp)}
    #+end_src
 
 ** Stable Marriage Execution
@@ -360,13 +462,14 @@ pair prefers each other over their current matching?
 
 ** Strategy
    - Suitors can not improve their results by changing their rankings
-   - Reviewers *can* (sometimes) improve their results by [[https://doi.org/10.1016/j.geb.2014.01.005][truncating
-     their rankings]] -- but risk of not getting matched at all
+   - Reviewers *can* (sometimes) improve their results by
+     [[https://doi.org/10.1016/j.geb.2014.01.005][truncating their
+     rankings]] -- but risk not getting matched at all
    - Reviewer "H" originally gets 8th suitor on their list
    - By not permitting this matching, they (and "A" as well) improve
      their match
    #+begin_src q
-     q)1+(,'/)(B?'{value[x]!key x} first .matching.sm[G]::) each 1 @[;"H";7#]\ B
+     q)1+(,'/)(B?'{[k!v]v!k} first .matching.sm[G]::) each 1 @[;"H";7#]\ B
      A| 7 2
      B| 7 7
      C| 8 8
@@ -381,7 +484,7 @@ pair prefers each other over their current matching?
 
 * Stable Roommates (SR) Problem
   - What if we only had a single population?
-  - Each participant is required to rank every other participant
+  - Each participant is required to rank every *other* participant
   - It is possible that no stable solution exists
 
 ** Stable Roommates Algorithm
@@ -394,32 +497,35 @@ pair prefers each other over their current matching?
      stable solutions
 
 ** Stable Roommates Wrapper
-   - Once again, the preference dictionary is enumerated
-   - And the results are unenumerated before being passed back
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the dictionary
+     parameter
+   - The preferences are enumerated
+   - The results are unenumerated before being passed back as a
+     dictionary
 
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B2 -A5 '^sr:' matching.q
+     grep -B2 -A4 '^sr:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
    / given (R)oomate preference dictionary, return the (a)ssignment dictionary
    / and (R)oommate preference dictionaries from each decycle stage
-   sr:{[R]
-    ur:key R;                      / unique roommates
-    aR:(count[R]#0N;ur?value R);   / initial assignment/enumerated values
+   sr:{[rn!rp]
+    aR:(count[rn]#0N;rn?rp);       / initial assignment/enumerated values
     aR:sra aR;                     / apply stable roommate (SR) algorithm
-    aR:ur!/:ur aR;                 / map enumerations back to original values
+    aR:rn!/:rn aR;                 / map enumerations back to original values
     aR}
    #+end_src
 
 ** Stable Roommates Algorithm
    - Phase 1 applies the stable marriage ([[* Stable Marriage Algorithm][Gale-Shapley]]) algorithm 
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the list and throw
+     away the first element
    - The results of phase 1 are then passed to [[*Decycling Roommate Assignments][~.matching.decycle~]] to
      remove unstable cycles
    - A final assignment vector is prepended to the intermediate 'decycle'
      states before being returned
-
    #+begin_src sh :exports results :results output code :wrap src q
      grep -B2 -A4 '^sra:' matching.q
    #+end_src
@@ -429,7 +535,7 @@ pair prefers each other over their current matching?
    / given (a)ssignment vector and (R)oomate preferences, return the completed
    / (a)ssignment vector (R)oommate preferences from each decycle stage
    sra:{[aR]
-    R:last sma over aR;            / apply phase 1 and throw away assignments
+    (;R):sma over aR;              / apply phase 1 and throw away assignments
     R:decycle scan R;              / apply phase 2
     aR:enlist[last[R][;0]],R;      / prepend assignment vector
     aR}
@@ -465,9 +571,9 @@ pair prefers each other over their current matching?
    - A worked example (including decycling) can be found on the Stable
      Roommates Problem [[https://en.wikipedia.org/wiki/Stable_roommates_problem][Wikipedia page]]
    - Each participant ranks all *other* participants
-   - Even though these are integers, the algorithm requires 0-index
-     enumerations so we create a dictionary and supply it to the
-     algorithm wrapper
+   - Even though this example uses integers, the algorithm requires
+     0-index enumerations so we create a dictionary and supply it to
+     the algorithm wrapper
    #+begin_src q
      q)show R:(1+til count R)!R:get each read0 `wmate.txt
      1| 3 4 2 6 5
@@ -482,8 +588,8 @@ pair prefers each other over their current matching?
      + the assignment dictionary
      + the results of the [[* Stable Marriage Algorithm][Gale-Shapley]] algorithm
      + each step of the decycling process
-   - Notice how the assignment dictionary is symmetric. 1 is assigned
-     6 and 6 is assigned 1
+   - Notice how the assignment dictionary is symmetric -- 1 is
+     assigned 6 and 6 is assigned 1
    #+begin_src q
      q).matching.sr R
      1 2 3 4 5 6!6 4 5 2 3 1
@@ -502,8 +608,8 @@ pair prefers each other over their current matching?
 
 * Hospital-Resident (HR) Problem
   - What if there was capacity for more than a single match?
-  - Conceptually the same as SM but algorithm needs to be generalized
-    for multiple matches
+  - Conceptually the same as the SM algorithm, but needs to be
+    generalized for multiple matches
   - The hospitals, in this case, may have capacity greater than one
 
 ** National Residency Matching Program
@@ -513,9 +619,9 @@ pair prefers each other over their current matching?
    - 1950s -- The [[https://www.nrmp.org/][National Residency Matching Program]] was created to
      match residents to hospitals in a hospital-optimal stable
      allocation
-   - 1998 -- Matching updated to the student-optimal [[https://doi.org/10.1257/aer.89.4.748][Roth-Peranson
-     algorithm]] that also permits couples to submit ranked pairs of
-     position
+   - 1998 -- Matching updated to the student-optimal
+     [[https://doi.org/10.1257/aer.89.4.748][Roth-Peranson algorithm]]
+     that also permits couples to submit ranked pairs of position
    - 2003 -- Alvin Roth published a summary of the NRMP in his paper
      [[https://jamanetwork.com/journals/jama/fullarticle/195998][The Origins, History, and Design of the Resident Match]]
    - 2012 -- Nobel prize in Economics was given to Alvin Roth and
@@ -537,20 +643,21 @@ pair prefers each other over their current matching?
    - The interface for both the hospital-optimal and resident-optimal
      algorithms are the same and they both require the mapping from
      dictionaries to enumerated lists (and back again)
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the dictionary
+     parameters
 
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B2 -A8 '^hrw:' matching.q
+     grep -B2 -A7 '^hrw:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
    / hospital resident (HR) problem wrapper function that enumerates the inputs,
    / calls the hr function and unenumerates the results
-   hrw:{[hrf;C;H;R]
-    uh:key H; ur:key R;
-    hrHR:((count[H];0)#0N;count[R]#0N;ur?value H;uh?value R);
-    hrHR:hrf[C uh] over hrHR;
-    hrHR:(uh;ur;uh;ur)!'(ur;uh;ur;uh)@'hrHR;
+   hrw:{[hrf;C;hn!hp;rn!rp]
+    hrHR:((count hn;0)#0N;count[rn]#0N;rn?hp;hn?rp);
+    hrHR:hrf[C hn] over hrHR;
+    hrHR:(hn;rn;hn;rn)!'(rn;hn;rn;hn)@'hrHR;
     hrHR}
 
    hrr:hrw[hrra]                  / hospital resident (resident-optimal)
@@ -559,38 +666,42 @@ pair prefers each other over their current matching?
      
 ** Hospital-Resident Resident-Optimal Implementation
 
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the list of
+     parameters used in the iteration as well as to assign the results
+     of [[* Pruning Preference Vectors][~.matching.prune~]]
    - To find next available resident we limit our search to unmatched
      residents with viable preferences
    - The ~?~ find operator is used again to find the first such
      resident
    - Drop student when over capacity and prune when at capacity
-   
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B2 -A13 '^hrra:' matching.q
+     grep -B2 -A12 '^hrra:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
    / given hospital (c)apacity and (h)ospital matches, (r)esident matches,
    / (H)ospital and (R)esident preferences, find next resident-optimal match
-   hrra:{[c;hrHR]
-    h:hrHR 0;r:hrHR 1;H:hrHR 2;R:hrHR 3;
+   hrra:{[c;(h;r;H;R)]
     mi:?[;1b] 0<count each R w:where null r; / first unmatched with prefs
-    if[mi=count w;:hrHR];                    / nothing to match
+    if[mi=count w;:(h;r;H;R)];               / nothing to match
     hp:H hi:first R ri:w mi;                 / preferred hospital
-    if[not ri in hp;:.[hrHR;(3;ri);1_]];     / hospital rejects
+    if[not ri in hp;:(h;r;H;@[R;ri;1_])];    / hospital rejects
     ch:count ris:h[hi],:ri; r[ri]:hi;        / match
     if[ch>c hi;                              / over capacity
      wri:hp max hp?ris;                      / worst resident
      ch:count ris:h[hi]:drop[ris;wri]; / drop resident from hospital match
      r[wri]:0N;                        / drop resident match
      ];
-    if[ch=c hi; H[hi]:first hpR:prune[hp;R;hi;ris]; R:last hpR]; / prune
+    if[ch=c hi;(R;H hi):prune[R;hp;hi;ris]]; / prune
     (h;r;H;R)}
    #+end_src
 
 ** Hospital-Resident Hospital-Optimal Implementation
 
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the list of
+     parameters used in the iteration as well as to assign the results
+     of [[* Pruning Preference Vectors][~.matching.prune~]]
    - To find the next available hospital we ignore hospitals at
      capacity, then drop existing matches from hospital preferences
    - The ~?~ find operator is used again to find the first such
@@ -598,23 +709,22 @@ pair prefers each other over their current matching?
    - Prune on every match
 
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B2 -A10 '^hrha:' matching.q
+     grep -B2 -A9 '^hrha:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
    / given hospital (c)apacity and (h)ospital matches, (r)esident matches,
    / (H)ospital and (R)esident preferences, find next hospital-optimal match
-   hrha:{[c;hrHR]
-    h:hrHR 0;r:hrHR 1;H:hrHR 2;R:hrHR 3;
+   hrha:{[c;(h;r;H;R)]
     w:where c>count each h;        / limit to hospitals with capacity
     mi:?[;1b] 0<count each m:H[w] except' h w; / first with unmatched prefs
-    if[mi=count w;:hrHR];                      / nothing to match
+    if[mi=count w;:(h;r;H;R)];                 / nothing to match
     rp:R ri:first m mi; hi:w mi;               / preferred resident
-    if[not hi in rp;:.[hrHR;(2;hi);1_]];       / resident preferences
+    if[not hi in rp;:(h;r;@[H;hi;1_];R)];      / resident preferences
     if[not null ehi:r ri; h:@[h;ehi;drop;ri]]; / drop existing match
-    h[hi],:ri; r[ri]:hi;                           / match
-    R[ri]:first rpH:prune[rp;H;ri;hi]; H:last rpH; / prune
+    h[hi],:ri; r[ri]:hi;                       / match
+    (H;R ri):prune[H;rp;ri;hi];                / prune
     (h;r;H;R)}
    #+end_src
 
@@ -675,20 +785,21 @@ pair prefers each other over their current matching?
    - The interface for both the supervisor-optimal and student-optimal
      algorithms are, once again, the same and they both require the
      mapping from dictionaries to enumerated lists (and back again)
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the dictionary
+     parameters
 
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B2 -A8 '^saw:' matching.q
+     grep -B2 -A7 '^saw:' matching.q
    #+end_src
 
    #+RESULTS:
    #+begin_src q
    / student-allocation (SA) problem wrapper function that enumerates the
    / inputs, calls the sa function and unenumerates the results
-   saw:{[saf;PC;UC;PU;U;S]
-    up:key PU; uu:key U; us:key S; / unique project, supervisors and students
-    pusUS:((count[PU];0)#0N;(count[U];0)#0N;count[S]#0N;us?value U;up?value S);
-    pusUS:saf[PC up;UC uu;uu?PU up] over pusUS;
-    pusUS:(up;uu;us;uu;us)!'(us;us;up;us;up)@'pusUS;
+   saw:{[saf;PC;UC;pn!pu;un!up;sn!sp]
+    pusUS:((count pn;0)#0N;(count un;0)#0N;count[sn]#0N;sn?up;pn?sp);
+    pusUS:saf[PC pn;UC un;un?pu] over pusUS;
+    pusUS:(pn;un;sn;un;sn)!'(sn;sn;pn;sn;pn)@'pusUS;
     pusUS}
 
    sas:saw[sasa]                   / student-allocation (student-optimal)
@@ -697,13 +808,16 @@ pair prefers each other over their current matching?
 
 ** Student-Allocation Student-Optimal Implementation
 
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the list of
+     parameters used in the iteration as well as to assign the last
+     result of [[* Pruning Preference Vectors][~.matching.prune~]]
    - Limit search to unmatched students with viable preferences
    - The ~?~ find operator is used again to find the first such
      student
    - Drop student when over capacity and prune when at capacity
    
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B4 -A18 '^sasa:' matching.q
+     grep -B4 -A17 '^sasa:' matching.q
    #+end_src
 
    #+RESULTS:
@@ -712,10 +826,9 @@ pair prefers each other over their current matching?
    / s(u)pervisor map and (p)roject matches, s(u)pervisor matches, (s)tudent
    / matches, s(U)pervisor preferences and (S)tudent preferences, find next
    / student-optimal match
-   sasa:{[pc;uc;pu;pusUS]
-    p:pusUS 0;u:pusUS 1;s:pusUS 2;U:pusUS 3;S:pusUS 4;
+   sasa:{[pc;uc;pu;(p;u;s;U;S)]
     mi:?[;1b] 0<count each S w:where null s; / first unmatched student
-    if[mi=count w;:pusUS];                   / nothing to match
+    if[mi=count w;:(p;u;s;U;S)];             / nothing to match
     up:U ui:pu pi:first S si:w mi; / preferred project's supervisors preferences
     cu:count usis:u[ui],:si;cp:count psis:p[pi],:si;s[si]:pi; / match
     if[cp>pc pi;                         / project over capacity
@@ -728,20 +841,23 @@ pair prefers each other over their current matching?
      p:@[p;s wsi;drop;wsi]; s[wsi]:0N;   / drop from other project
      cu:count usis:u[ui]:drop[usis;wsi]; / drop from supervisor
      ];
-    if[cp=pc pi;S:last prune[up;S;pi;psis]]; / prune
-    if[cu=uc ui;U[ui]:first upS:prune[up;S;where pu=ui;usis]; S:last upS];
+    if[cp=pc pi;(S;):prune[S;up;pi;psis]]; / prune
+    if[cu=uc ui;(S;U ui):prune[S;up;where pu=ui;usis]];
     (p;u;s;U;S)}
    #+end_src
 
 ** Student-Allocation Supervisor-Optimal Implementation
 
+   - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack the list of
+     parameters used in the iteration as well as to assign the last
+     result of [[* Pruning Preference Vectors][~.matching.prune~]]
    - The [[*Student-Allocation Supervisor Search][~.matching.nextusp~]] function is used to find the next
      available supervisor, student and project to match
-   - Iterate until either a match is found, or no matches available
+   - Iterate until either a match is found or no matches are available
    - Iteration passes the supervisor index and increments each time
    
    #+begin_src sh :exports results :results output code :wrap src q
-     grep -B4 -A10 '^saua:' matching.q
+     grep -B4 -A9 '^saua:' matching.q
    #+end_src
 
    #+RESULTS:
@@ -750,16 +866,15 @@ pair prefers each other over their current matching?
    / s(u)pervisor map and (p)roject matches, s(u)pervisor matches, (s)tudent
    / matches, s(U)pervisor preferences and (S)tudent preferences, find next
    / supervisor-optimal match
-   saua:{[pc;uc;pu;pusUS]
-    p:pusUS 0;u:pusUS 1;s:pusUS 2;U:pusUS 3;S:pusUS 4;
+   saua:{[pc;uc;pu;(p;u;s;U;S)]
     ubc:uc>count each u;                          / supervisors below capacity
     pbc:pc>count each p;                          / projects below capacity
     usp:(1=count::) nextusp[pbc;ubc;pu;p;S;U]/ 0; / iterate across supervisors
-    if[not count usp;:pusUS];                     / no further matches found
-    ui:usp 0; sp:S si:usp 1; pi: usp 2;           / unpack
+    if[not count usp;:(p;u;s;U;S)];               / no further matches found
+    (ui;si;pi):usp;                               / unpack
     if[not null epi:s si; u:@[u;pu epi;drop;si]; p:@[p;epi;drop;si]]; / drop
     u[ui],:si; p[pi],:si; s[si]:pi;                                   / match
-    S[si]:first prune[sp;U;();pi];                                    / prune
+    (;S si):prune[U;S si;();pi];                                      / prune
     (p;u;s;U;S)}
    #+end_src
 
@@ -854,27 +969,32 @@ pair prefers each other over their current matching?
       q)\l prof.q
       q).prof.prof `.matching
       q)\ts:100 eSR:.matching.sm[G;B]
-      130 8720
+      82 8672
       q).prof.report`
       Name            Line Stmt                           Count Total     Own       Pct   
       ------------------------------------------------------------------------------------
-      .matching.prune 3    S:@[;last c;drop;]/[S;ris];    1400  00:00.036 00:00.028 22.07%
-      .matching.sma   9    eSR[Si]:last rpS:prune[rp;eSR  1600  00:00.063 00:00.013 10.25%
-      .matching.sm    3    eSR:smpa over eSR;             100   00:00.128 00:00.008 6.59% 
-      .matching.sma   2    mi:?[;1b]0<count each S w:wher 1700  00:00.008 00:00.008 6.77% 
-      .matching.drop  0    x _ x?y                        5200  00:00.007 00:00.007 5.95% 
-      .matching.prune 2    rp:first c:(0;i)cut rp;        1400  00:00.006 00:00.006 4.84% 
-      .matching.sma   3    if[mi=count w;:eSR];           1700  00:00.006 00:00.006 4.78% 
-      .matching.sma   4    rp:R ri:first s:S si:w mi;     1600  00:00.006 00:00.006 4.61% 
-      .matching.sma   6    if[not n=ei:e?ri;if[sir<rp?ei; 1600  00:00.006 00:00.006 5.29% 
-      .matching.sma   8    e[si]:ri;eSR[0]:e;             1600  00:00.006 00:00.006 4.98%
-      ..
-      q)
+      .matching.prune 3    S:S@[;sis;drop;]/ris;          1400  00:00.024 00:00.018 22.97%
+      .matching.sma   9    (eSR Si;eSR[Ri;ri]):prune[eSR  1600  00:00.043 00:00.009 11.83%
+      .matching.drop  0    x _ x?y                        5200  00:00.005 00:00.005 6.28% 
+      .matching.sm    2    eSR:sma over eSR;              100   00:00.081 00:00.005 6.65% 
+      .matching.sma   2    mi:?[;1b]0<count each S w:wher 1700  00:00.005 00:00.005 6.61% 
+      .matching.prune 2    (rp;sis):(0;i)cut rp;          1400  00:00.004 00:00.004 5.61% 
+      .matching.sma   3    if[mi=count w;:eSR];           1700  00:00.004 00:00.004 4.89% 
+      .matching.sma   6    if[not count[e]=ei:e?ri;if[sir 1600  00:00.004 00:00.004 5.47% 
+      .matching.sma   8    e[si]:ri;eSR[0]:e;             1600  00:00.004 00:00.004 5.41% 
+      .matching.prune 4    (S;rp)                         1400  00:00.003 00:00.003 4.03% 
+      .matching.sma   4    rp:R ri:first s:S si:w mi;     1600  00:00.003 00:00.003 4.68% 
+      .matching.sma   5    if[count[rp]=sir:rp?si;:.[eSR; 1600  00:00.003 00:00.003 4.73% 
+      .matching.sma   10   eSR                            1600  00:00.003 00:00.003 4.49% 
+      .matching.prune 0    if[count[rp]<=i:1+max rp?sis;: 1600  00:00.002 00:00.002 2.64% 
+      .matching.sma   0    e:eSR 0;S:eSR Si:1;R:eSR Ri:-1 1700  00:00.002 00:00.002 2.49% 
+      .matching.sm    0    eSR:(count[sn]#0N;rn?sp;sn?rp) 100   00:00.000 00:00.000 0.37% 
+      .matching.sm    3    eSR:(sn;sn;rn)!'(rn;rn;sn)@'eS 100   00:00.000 00:00.000 0.49% 
+      .matching.sm    4    eSR                            100   00:00.000 00:00.000 0.27% 
     #+end_src
 
 ** Timing Setup
    - Using PyKX we can access both implementations from python
-   - Using ~np.array~ prevents q from using mixed lists
    - Need to [[https://github.com/daffidwilde/matching/issues/139][increase recursion limit]] due to ~copy.deepcopy~ call
      #+begin_src sh :exports results :results output code :wrap src python
        grep 'setrecursion' timing.py
@@ -908,42 +1028,40 @@ pair prefers each other over their current matching?
   right -- Marshall Lochbaum "Naming is Hard" [[https://www.arraycast.com/][The Array Cast]]
   #+end_quote
 
-** PyKX Type Handling
-   - Uniform lists are promoted to vectors in ~q~
+** PyKX Type Handling (SOLVED)!
+   - The python lists (not just np arrays) and dictionary keys are
+     promoted to uniform Kdb+ vectors
      #+begin_src python
-       >>> _ = kx.q("0N!(1;2)")
-       1 2
+       >>> kx.q("0N!",{1:[1,2],2:[2,3]})
+       1 2!(1 2;2 3)
+       pykx.Dictionary(pykx.q('
+       1| 1 2
+       2| 2 3
+       '))
      #+end_src
-   - But not when passed from python
-     #+begin_src python
-       >>> _ = kx.q("0N!",[1,2])
-       (1;2)
-     #+end_src
-   - For that you need ~numpy~
-     #+begin_src python
-       >>> _ = kx.q("0N!",np.array([1,2]))
-       1 2
-     #+end_src
-   - But what about dictionary keys?
-     #+begin_src python
-       >>> _ = kx.q("0N!",{1:np.array([1,2]),2:np.array([2,3])})
-       (1;2)!(1 2;2 3)
-     #+end_src
-** Multiple Assignment  
+** Pattern Matching (SOLVED)!
    - Using ~over~ and ~scan~ requires packing and unpacking complex
      state for each iteration
      #+begin_src q
        p:pusUS 0;u:pusUS 1;s:pusUS 2;U:pusUS 3;S:pusUS 4;
      #+end_src
-   - Multiple assignment would make this much more elegant
+   - Pattern matching makes this much more elegant
      #+begin_src q
        q)(p;u;s;U;S):pusUS;
-       'assign
-       [0]  (p;u;s;U;S):pusUS;
-                       ^
      #+end_src
-
-** YAML Support
+     
+** Native ~assert~ (SOLVED)!
+    
+   - Unit tests require an ~assert~ function that throws an exception
+     when the assertion fails
+   - We can use Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] as a lightweight assert
+   #+begin_src q
+     q)(1b):{[a:1;b:2]} ~ {[a:1;b:1]}
+     'match
+     [0]  (1b):{[a:1;b:2]} ~ {[a:1;b:1]}
+              ^
+   #+end_src
+** YAML Support (NOT SOLVED)
    - The hospital-resident problem [[https://zenodo.org/record/3688091/files/capacities.yml][capacities]], [[https://zenodo.org/record/3688091/files/hospitals.yml][hospitals]] and [[https://zenodo.org/record/3688091/files/residents.yml][residents]]
      inputs are stored in YAML files
    - ~KDB Insights~ [[https://code.kx.com/insights/1.4/enterprise/assemblies/building-assemblies.html][configuration]] is stored in YAML files
@@ -953,28 +1071,6 @@ pair prefers each other over their current matching?
      q).y.k "\n" sv read0 `:hospitals.yml
    #+end_src
      
-** Native ~assert~
-    
-   - Every project I create requires the definition of a ~.util.assert~
-     function to build unit tests.
-     #+begin_src sh :exports results :results output code :wrap src q
-       grep -B1 '^assert' util.q
-     #+end_src
-
-     #+RESULTS:
-     #+begin_src q
-     / throw verbose exception if x <> y
-     assert:{if[not x~y;'`$"expecting '",(-3!x),"' but found '",(-3!y),"'"]}
-     #+end_src
-
-   - Don't need a complex ~qunit~ framework, just an ~assert~
-     #+begin_src q
-       q).util.assert[`foo] `bar
-       'expecting '`foo' but found '`bar'
-       [0]  .util.assert[`foo] `bar
-            ^
-     #+end_src
-   
 * Summary
   - Which of these algorithms /matches/ my intern problem?
   - Did I get assigned more appropriate interns?
@@ -986,6 +1082,8 @@ pair prefers each other over their current matching?
     + [[https://nap.nationalacademies.org/read/23508/][The Kidney Donor Problem]]
   - Vector implementations are faster than object-oriented ones
   - The algorithms are heavily reliant on the ~?~ find operator
+  - Kdb+ 4.1 [[https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching][pattern matching]] is used to unpack dictionary and list
+    function arguments as well as the results from functions
   - The ~q~ ~matching~ library can be found on github:
-    https://github.com/psaris/matching/releases/tag/kxcon23
+    https://github.com/psaris/matching/releases/tag/hkmeetup
   - This presentation can be found at [[https://nick.psaris.com][https://nick.psaris.com]]
