@@ -23,7 +23,7 @@ Mellon University][]'s [MSCF][] program and a Managing Director in
 
 [bank of america]: https://www.bankofamerica.com "Bank of America"
 
-# New York I
+# New York
 After graduating [Duke University][] with a degree in Physics and
 Chinese, he began his career in finance at [Morgan Stanley][] in New
 York. He obtained his [CFA][] charter in 2003, and a Masters in
@@ -67,8 +67,8 @@ topic is introduced, tips are highlighted to help you write better
 [vector]: https://vector.org.uk
     "Vector: The Journal of the British APL Association"
 
-# New York II
-In 2016, Nick moved back to New York and joined his firm's Equity CRB
+# America II
+In 2016, Nick moved back to America and joined his firm's Equity CRB
 desk where he manages the data and analytics platform built with
 [q][].  Most recently, Nick built the [PREDICTIFY][] cross-asset
 client interest model using a collaborative filtering machine learning
@@ -82,7 +82,9 @@ Microstructure and Algorithmic Trading][mmat] class for [Carnegie
 Mellon University][]'s [MSCF][] program as an [adjunct professor][].
 Students use [q][] and [jupyter][] notebooks to analyze high-frequency
 tick data sourced from [NYSE Daily TAQ][], [CME DataMine][], and [ICE
-Cryptocurrencies][].
+Cryptocurrencies][]. Comparative statistics on the program can be
+found at Risk.net's [Quant Guide 2022: Carnegie Mellon
+University][risk.net] page.
 
 [carnegie mellon university]: https://cmu.edu "Carnegie Mellon University"
 [mmat]: https://www.cmu.edu/mscf/academics/curriculum/46982-market-microstructure-and-algorithmic-trading.html
@@ -94,6 +96,8 @@ Cryptocurrencies][].
 [nyse daily taq]: https://www.nyse.com/market-data/historical/daily-taq "NYSE Daily TAQ"
 [cme datamine]: https://www.cmegroup.com/confluence/display/EPICSANDBOX/CME+DataMine "CME DataMine"
 [ice cryptocurrencies]: https://www.theice.com/market-data/cryptocurrencies "ICE Cryptocurrencies"
+[risk.net]: https://www.risk.net/quantitative-finance/7960181/quant-guide-2025-carnegie-mellon-university
+    "Quant Guide 2025: Carnegie Mellon University"
 
 # Fun Q
 Combining his love of data and efficient [q][] algorithms, Nick
