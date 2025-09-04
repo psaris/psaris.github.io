@@ -12,26 +12,26 @@ tags:
 
 # Table of Contents
 
--   [Recorded Presentation](#org3278aa4)
--   [Motivation](#org66ff9d0)
--   [Demonstration](#orgd9c05c5)
--   [Stable Marriage (SM) Problem](#orgb0e606a)
--   [Stable Roommates (SR) Problem](#orga71a201)
--   [Hospital-Resident (HR) Problem](#org43987f1)
--   [Student-Allocation (SA) Problem](#org863ddf5)
--   [Performance](#orgdb33b42)
--   [Q Enhancements](#org5f0e1e8)
--   [Summary](#orgf30bed0)
+-   [Recorded Presentation](#orgd232c17)
+-   [Motivation](#org2ba8ebc)
+-   [Demonstration](#org5ee8b82)
+-   [Stable Marriage (SM) Problem](#org402eed7)
+-   [Stable Roommates (SR) Problem](#orgd25a486)
+-   [Hospital-Resident (HR) Problem](#org6b542b4)
+-   [Student-Allocation (SA) Problem](#orgc40bbab)
+-   [Performance](#org8f57cd3)
+-   [Q Enhancements](#org1d67fa4)
+-   [Summary](#org77008b7)
 
 
-<a id="org3278aa4"></a>
+<a id="orgd232c17"></a>
 
 # Recorded Presentation
 
-[Matching Algorithms in q – An Interactive Presentation](https://kx.com/videos/kx-con-23-matching-algorithms-in-q-an-interactive-presentation/)
+[Matching Algorithms in q – An Interactive Presentation](https://kx.com/resources/videos/matching-algorithms-in-kdb-q/)
 
 
-<a id="org66ff9d0"></a>
+<a id="org2ba8ebc"></a>
 
 # Motivation
 
@@ -43,7 +43,7 @@ tags:
 -   Is there a single optimal pairing?
 
 
-<a id="orgd9c05c5"></a>
+<a id="org5ee8b82"></a>
 
 # Demonstration
 
@@ -177,7 +177,7 @@ J| 9
 ```
 
 
-<a id="orgb0e606a"></a>
+<a id="org402eed7"></a>
 
 # Stable Marriage (SM) Problem
 
@@ -250,18 +250,18 @@ q)R:key[G]?value B                / gbie enumerations
 
 -   Enumerate the suitor and reviewer dictionaries
 -   Build all-null engagement vector
--   Iterator with [`.matching.sma`](#org4fa18bd) until convergence
+-   Iterator with [`.matching.sma`](#orgab47814) until convergence
 -   Convert enumerations back to dictionaries
 
 ```q
 / given (S)uitor and (R)eviewer preferences, return the (e)ngagement
 / dictionary and remaining (S)uitor and (R)eviewer preferences for inspection
-sm:{[S;R]
- us:key S; ur:key R;                      / unique suitors and reviewers
- eSR:(count[S]#0N;ur?value S;us?value R); / initial state/enumerated values
+sm:{[sn!sp;rn!rp]
+ eSR:(count[sn]#0N;rn?sp;sn?rp);  / initial state/enumerated values
  eSR:sma over eSR;                / iteratively apply Gale-Shapley algorithm
- eSR:(us;us;ur)!'(ur;ur;us)@'eSR; / map enumerations back to original values
+ eSR:(sn;sn;rn)!'(rn;rn;sn)@'eSR; / map enumerations back to original values
  eSR}
+
 ```
 
 
@@ -270,7 +270,7 @@ sm:{[S;R]
 -   The first line of every algorithm unpacks its arguments
 -   The suitor and reviewer indices &#x2013; `Si` and `Ri` respectively &#x2013;
     are defined as variables so that the same function can be used
-    for the [Stable Roommates (SR) Problem](#orga71a201)
+    for the [Stable Roommates (SR) Problem](#orgd25a486)
 
 ```q
 / given (e)ngagement vector and (S)uitor and (R)eviewer preferences, find
@@ -278,17 +278,17 @@ sm:{[S;R]
 / roommate preferences are assumed if (R)eviewer preferences are not
 / provided.
 sma:{[eSR]
- n:count e:eSR 0;S:eSR Si:1;R:eSR Ri:-1+count eSR;
+ e:eSR 0;S:eSR Si:1;R:eSR Ri:-1+count eSR;   / manually unpack
  mi:?[;1b] 0<count each S w:where null e;    / first unmatched with prefs
  if[mi=count w;:eSR];                        / no unmatched suitor
  rp:R ri:first s:S si:w mi;                  / preferred reviewer's prefs
  if[count[rp]=sir:rp?si;:.[eSR;(Si;si);1_]]; / not on reviewer's list
  / renege if already engaged and this suitor is better
- if[not n=ei:e?ri;if[sir<rp?ei;eSR:.[eSR;(Si;ei);1_];e[ei]:0N]];
- e[si]:ri; eSR[0]:e;                      / get engaged
- eSR[Si]:last rpS:prune[rp;eSR Si;ri;si]; / first replace suitor prefers
- eSR[Ri;ri]:first rpS;                    / order matters when used for SR
+ if[not count[e]=ei:e?ri;if[sir<rp?ei;eSR:.[eSR;(Si;ei);1_];e[ei]:0N]];
+ e[si]:ri; eSR[0]:e;                         / get engaged
+ (eSR Si;eSR[Ri;ri]):prune[eSR Si;rp;ri;si]; / assignment order matters
  eSR}
+
 ```
 
 
@@ -299,13 +299,13 @@ sma:{[eSR]
     2.  Remove the reviewer from all worse suitors' preferences
 
 ```q
-/ given (r)eviewer (p)refs, (S)uiter preferences and (s)uitor (i)ndice(s) and
-/ (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
-prune:{[rp;S;ris;sis]
- if[count[rp]=i:1+max rp?sis;:(rp;S)]; / return early if nothing to do
- rp:first c:(0;i) cut rp;              / drop worse suitors from preferences
- S:@[;last c;drop;]/[S;ris];           / drop reviewers from worse suitors
- (rp;S)}
+/ given (S)uiter preferences, (r)eviewer (p)refs, and (s)uitor (i)ndice(s)
+/ and (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
+prune:{[S;rp;ris;sis]
+ if[count[rp]<=i:1+max rp?sis;:(S;rp)]; / return early if nothing to do
+ (rp;sis):(0;i) cut rp;                 / drop worse suitors from preferences
+ S:S @[;sis;drop;]/ ris;                / drop reviewers from worse suitors
+ (S;rp)}
 ```
 
 
@@ -337,25 +337,25 @@ q)show last rpS                   / 4 is dropped from cut reviewers
 
 ## Pruning Logistics
 
-[`.matching.prune`](#orgc5e7d14) handles lists of suitors and reviewers
+[`.matching.prune`](#org3e420e7) handles lists of suitors and reviewers
 
--   The [Stable Roommates (SR) Problem](#orga71a201) requires the Suitor and
+-   The [Stable Roommates (SR) Problem](#orgd25a486) requires the Suitor and
     Reviewer preferences to be the same data structure
--   The [Hospital-Resident (HR) Problem](#org43987f1) requires the function to prune
+-   The [Hospital-Resident (HR) Problem](#org6b542b4) requires the function to prune
     the **worst** of multiple residents (acting as suitor) when the
     hospital reaches capacity
--   The [Student-Allocation (SA) Problem](#org863ddf5) requires the function to
+-   The [Student-Allocation (SA) Problem](#orgc40bbab) requires the function to
     prune multiple students (acting as suitor) **and** the **worst** of
     multiple projects (acting as reviewer)
 
 ```q
-/ given (r)eviewer (p)refs, (S)uiter preferences and (s)uitor (i)ndice(s) and
-/ (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
-prune:{[rp;S;ris;sis]
- if[count[rp]=i:1+max rp?sis;:(rp;S)]; / return early if nothing to do
- rp:first c:(0;i) cut rp;              / drop worse suitors from preferences
- S:@[;last c;drop;]/[S;ris];           / drop reviewers from worse suitors
- (rp;S)}
+/ given (S)uiter preferences, (r)eviewer (p)refs, and (s)uitor (i)ndice(s)
+/ and (r)eviewer (i)ndice(s), return the pruned reviewer and Suitor prefs
+prune:{[S;rp;ris;sis]
+ if[count[rp]<=i:1+max rp?sis;:(S;rp)]; / return early if nothing to do
+ (rp;sis):(0;i) cut rp;                 / drop worse suitors from preferences
+ S:S @[;sis;drop;]/ ris;                / drop reviewers from worse suitors
+ (S;rp)}
 ```
 
 
@@ -413,7 +413,7 @@ J| 5 5
 ```
 
 
-<a id="orga71a201"></a>
+<a id="orgd25a486"></a>
 
 # Stable Roommates (SR) Problem
 
@@ -425,9 +425,9 @@ J| 5 5
 ## Stable Roommates Algorithm
 
 -   Robert W. Irving published a 2-phase solution in 1985
--   Phase 1 passes the roommate preferences to the [Gale-Shapley](#org41ff197)
+-   Phase 1 passes the roommate preferences to the [Gale-Shapley](#orgf2ee21e)
     algorithm as both the suitor and reviewer
--   Since `q` does not allow passing by pointer, the [`.matching.sma`](#org4fa18bd)
+-   Since `q` does not allow passing by pointer, the [`.matching.sma`](#orgab47814)
     function was conditioned on how many preference lists were passed
 -   Phase 2 removes 'cycles' which are rotations that produce equally
     stable solutions
@@ -441,19 +441,19 @@ J| 5 5
 ```q
 / given (R)oomate preference dictionary, return the (a)ssignment dictionary
 / and (R)oommate preference dictionaries from each decycle stage
-sr:{[R]
- ur:key R;                      / unique roommates
- aR:(count[R]#0N;ur?value R);   / initial assignment/enumerated values
+sr:{[rn!rp]
+ aR:(count[rn]#0N;rn?rp);       / initial assignment/enumerated values
  aR:sra aR;                     / apply stable roommate (SR) algorithm
- aR:ur!/:ur aR;                 / map enumerations back to original values
+ aR:rn!/:rn aR;                 / map enumerations back to original values
  aR}
+
 ```
 
 
 ## Stable Roommates Algorithm
 
--   Phase 1 applies the stable marriage ([Gale-Shapley](#org41ff197)) algorithm
--   The results of phase 1 are then passed to [`.matching.decycle`](#org1ca29c9) to
+-   Phase 1 applies the stable marriage ([Gale-Shapley](#orgf2ee21e)) algorithm
+-   The results of phase 1 are then passed to [`.matching.decycle`](#org5b72de4) to
     remove unstable cycles
 -   A final assignment vector is prepended to the intermediate 'decycle'
     states before being returned
@@ -462,7 +462,7 @@ sr:{[R]
 / given (a)ssignment vector and (R)oomate preferences, return the completed
 / (a)ssignment vector (R)oommate preferences from each decycle stage
 sra:{[aR]
- R:last sma over aR;            / apply phase 1 and throw away assignments
+ (;R):sma over aR;              / apply phase 1 and throw away assignments
  R:decycle scan R;              / apply phase 2
  aR:enlist[last[R][;0]],R;      / prepend assignment vector
  aR}
@@ -511,9 +511,9 @@ q)show R:(1+til count R)!R:get each read0 `wmate.txt
 
 ## Stable Roommates Execution
 
--   The [`.matching.sr`](#org2676b5f) function produces:
+-   The [`.matching.sr`](#orgce03611) function produces:
     -   the assignment dictionary
-    -   the results of the [Gale-Shapley](#org41ff197) algorithm
+    -   the results of the [Gale-Shapley](#orgf2ee21e) algorithm
     -   each step of the decycling process
 -   Notice how the assignment dictionary is symmetric. 1 is assigned
     6 and 6 is assigned 1
@@ -536,7 +536,7 @@ q).matching.sr R
         can be excluded from the cycle
 
 
-<a id="org43987f1"></a>
+<a id="org6b542b4"></a>
 
 # Hospital-Resident (HR) Problem
 
@@ -590,15 +590,15 @@ q).matching.sr R
 ```q
 / hospital resident (HR) problem wrapper function that enumerates the inputs,
 / calls the hr function and unenumerates the results
-hrw:{[hrf;C;H;R]
- uh:key H; ur:key R;
- hrHR:((count[H];0)#0N;count[R]#0N;ur?value H;uh?value R);
- hrHR:hrf[C uh] over hrHR;
- hrHR:(uh;ur;uh;ur)!'(ur;uh;ur;uh)@'hrHR;
+hrw:{[hrf;C;hn!hp;rn!rp]
+ hrHR:((count hn;0)#0N;count[rn]#0N;rn?hp;hn?rp);
+ hrHR:hrf[C hn] over hrHR;
+ hrHR:(hn;rn;hn;rn)!'(rn;hn;rn;hn)@'hrHR;
  hrHR}
 
 hrr:hrw[hrra]                  / hospital resident (resident-optimal)
 hrh:hrw[hrha]                  / hospital resident (hospital-optimal)
+
 ```
 
 
@@ -613,20 +613,20 @@ hrh:hrw[hrha]                  / hospital resident (hospital-optimal)
 ```q
 / given hospital (c)apacity and (h)ospital matches, (r)esident matches,
 / (H)ospital and (R)esident preferences, find next resident-optimal match
-hrra:{[c;hrHR]
- h:hrHR 0;r:hrHR 1;H:hrHR 2;R:hrHR 3;
+hrra:{[c;(h;r;H;R)]
  mi:?[;1b] 0<count each R w:where null r; / first unmatched with prefs
- if[mi=count w;:hrHR];                    / nothing to match
+ if[mi=count w;:(h;r;H;R)];               / nothing to match
  hp:H hi:first R ri:w mi;                 / preferred hospital
- if[not ri in hp;:.[hrHR;(3;ri);1_]];     / hospital rejects
+ if[not ri in hp;:(h;r;H;@[R;ri;1_])];    / hospital rejects
  ch:count ris:h[hi],:ri; r[ri]:hi;        / match
  if[ch>c hi;                              / over capacity
   wri:hp max hp?ris;                      / worst resident
   ch:count ris:h[hi]:drop[ris;wri]; / drop resident from hospital match
   r[wri]:0N;                        / drop resident match
   ];
- if[ch=c hi; H[hi]:first hpR:prune[hp;R;hi;ris]; R:last hpR]; / prune
+ if[ch=c hi;(R;H hi):prune[R;hp;hi;ris]]; / prune
  (h;r;H;R)}
+
 ```
 
 
@@ -641,17 +641,17 @@ hrra:{[c;hrHR]
 ```q
 / given hospital (c)apacity and (h)ospital matches, (r)esident matches,
 / (H)ospital and (R)esident preferences, find next hospital-optimal match
-hrha:{[c;hrHR]
- h:hrHR 0;r:hrHR 1;H:hrHR 2;R:hrHR 3;
+hrha:{[c;(h;r;H;R)]
  w:where c>count each h;        / limit to hospitals with capacity
  mi:?[;1b] 0<count each m:H[w] except' h w; / first with unmatched prefs
- if[mi=count w;:hrHR];                      / nothing to match
+ if[mi=count w;:(h;r;H;R)];                 / nothing to match
  rp:R ri:first m mi; hi:w mi;               / preferred resident
- if[not hi in rp;:.[hrHR;(2;hi);1_]];       / resident preferences
+ if[not hi in rp;:(h;r;@[H;hi;1_];R)];      / resident preferences
  if[not null ehi:r ri; h:@[h;ehi;drop;ri]]; / drop existing match
- h[hi],:ri; r[ri]:hi;                           / match
- R[ri]:first rpH:prune[rp;H;ri;hi]; H:last rpH; / prune
+ h[hi],:ri; r[ri]:hi;                       / match
+ (H;R ri):prune[H;rp;ri;hi];                / prune
  (h;r;H;R)}
+
 ```
 
 
@@ -698,7 +698,7 @@ q)5#hrHR 1
 ```
 
 
-<a id="org863ddf5"></a>
+<a id="orgc40bbab"></a>
 
 # Student-Allocation (SA) Problem
 
@@ -736,11 +736,10 @@ q)5#hrHR 1
 ```q
 / student-allocation (SA) problem wrapper function that enumerates the
 / inputs, calls the sa function and unenumerates the results
-saw:{[saf;PC;UC;PU;U;S]
- up:key PU; uu:key U; us:key S; / unique project, supervisors and students
- pusUS:((count[PU];0)#0N;(count[U];0)#0N;count[S]#0N;us?value U;up?value S);
- pusUS:saf[PC up;UC uu;uu?PU up] over pusUS;
- pusUS:(up;uu;us;uu;us)!'(us;us;up;us;up)@'pusUS;
+saw:{[saf;PC;UC;pn!pu;un!up;sn!sp]
+ pusUS:((count pn;0)#0N;(count un;0)#0N;count[sn]#0N;sn?up;pn?sp);
+ pusUS:saf[PC pn;UC un;un?pu] over pusUS;
+ pusUS:(pn;un;sn;un;sn)!'(sn;sn;pn;sn;pn)@'pusUS;
  pusUS}
 
 sas:saw[sasa]                   / student-allocation (student-optimal)
@@ -760,10 +759,9 @@ sau:saw[saua]                   / student-allocation (supervisor-optimal)
 / s(u)pervisor map and (p)roject matches, s(u)pervisor matches, (s)tudent
 / matches, s(U)pervisor preferences and (S)tudent preferences, find next
 / student-optimal match
-sasa:{[pc;uc;pu;pusUS]
- p:pusUS 0;u:pusUS 1;s:pusUS 2;U:pusUS 3;S:pusUS 4;
+sasa:{[pc;uc;pu;(p;u;s;U;S)]
  mi:?[;1b] 0<count each S w:where null s; / first unmatched student
- if[mi=count w;:pusUS];                   / nothing to match
+ if[mi=count w;:(p;u;s;U;S)];             / nothing to match
  up:U ui:pu pi:first S si:w mi; / preferred project's supervisors preferences
  cu:count usis:u[ui],:si;cp:count psis:p[pi],:si;s[si]:pi; / match
  if[cp>pc pi;                         / project over capacity
@@ -776,15 +774,16 @@ sasa:{[pc;uc;pu;pusUS]
   p:@[p;s wsi;drop;wsi]; s[wsi]:0N;   / drop from other project
   cu:count usis:u[ui]:drop[usis;wsi]; / drop from supervisor
   ];
- if[cp=pc pi;S:last prune[up;S;pi;psis]]; / prune
- if[cu=uc ui;U[ui]:first upS:prune[up;S;where pu=ui;usis]; S:last upS];
+ if[cp=pc pi;(S;):prune[S;up;pi;psis]]; / prune
+ if[cu=uc ui;(S;U ui):prune[S;up;where pu=ui;usis]];
  (p;u;s;U;S)}
+
 ```
 
 
 ## Student-Allocation Supervisor-Optimal Implementation
 
--   The [`.matching.nextusp`](#orgbdb2bf6) function is used to find the next
+-   The [`.matching.nextusp`](#org16aef98) function is used to find the next
     available supervisor, student and project to match
 -   Iterate until either a match is found, or no matches available
 -   Iteration passes the supervisor index and increments each time
@@ -794,17 +793,17 @@ sasa:{[pc;uc;pu;pusUS]
 / s(u)pervisor map and (p)roject matches, s(u)pervisor matches, (s)tudent
 / matches, s(U)pervisor preferences and (S)tudent preferences, find next
 / supervisor-optimal match
-saua:{[pc;uc;pu;pusUS]
- p:pusUS 0;u:pusUS 1;s:pusUS 2;U:pusUS 3;S:pusUS 4;
+saua:{[pc;uc;pu;(p;u;s;U;S)]
  ubc:uc>count each u;                          / supervisors below capacity
  pbc:pc>count each p;                          / projects below capacity
  usp:(1=count::) nextusp[pbc;ubc;pu;p;S;U]/ 0; / iterate across supervisors
- if[not count usp;:pusUS];                     / no further matches found
- ui:usp 0; sp:S si:usp 1; pi: usp 2;           / unpack
+ if[not count usp;:(p;u;s;U;S)];               / no further matches found
+ (ui;si;pi):usp;                               / unpack
  if[not null epi:s si; u:@[u;pu epi;drop;si]; p:@[p;epi;drop;si]]; / drop
  u[ui],:si; p[pi],:si; s[si]:pi;                                   / match
- S[si]:first prune[sp;U;();pi];                                    / prune
+ (;S si):prune[U;S si;();pi];                                      / prune
  (p;u;s;U;S)}
+
 ```
 
 
@@ -888,7 +887,7 @@ q)5#pusUS 2
 ```
 
 
-<a id="orgdb33b42"></a>
+<a id="org8f57cd3"></a>
 
 # Performance
 
@@ -931,7 +930,7 @@ q)5#pusUS 2
 -   Need to [increase recursion limit](https://github.com/daffidwilde/matching/issues/139) due to `copy.deepcopy` call
     
     ```python
-    sys.setrecursionlimit(10000) # overcome call to copy.deepcopy
+    sys.setrecursionlimit(10000)  # overcome call to copy.deepcopy
     ```
 
 
@@ -950,7 +949,7 @@ q)5#pusUS 2
     ```
 
 
-<a id="org5f0e1e8"></a>
+<a id="org1d67fa4"></a>
 
 # Q Enhancements
 
@@ -1025,8 +1024,7 @@ q).y.k "\n" sv read0 `:hospitals.yml
     function to build unit tests.
     
     ```q
-    / throw verbose exception if x <> y
-    assert:{if[not x~y;'`$"expecting '",(-3!x),"' but found '",(-3!y),"'"]}
+    
     ```
 
 -   Don't need a complex `qunit` framework, just an `assert`
@@ -1039,7 +1037,7 @@ q).y.k "\n" sv read0 `:hospitals.yml
     ```
 
 
-<a id="orgf30bed0"></a>
+<a id="org77008b7"></a>
 
 # Summary
 
@@ -1054,7 +1052,7 @@ q).y.k "\n" sv read0 `:hospitals.yml
 -   Vector implementations are faster than object-oriented ones
 -   The algorithms are heavily reliant on the `?` find operator
 -   The `q` `matching` library can be found on github:
-    [https://github.com/psaris/matching](https://github.com/psaris/matching)
+    <https://github.com/psaris/matching/releases/tag/kxcon23>
 -   This presentation can be found at [https://nick.psaris.com](https://nick.psaris.com)
 
 

@@ -31,7 +31,7 @@
 #+reveal_hlevel: 1
 
 * Recorded Presentation
-[[https://kx.com/videos/kx-con-23-matching-algorithms-in-q-an-interactive-presentation/][Matching Algorithms in q – An Interactive Presentation]]
+[[https://kx.com/resources/videos/matching-algorithms-in-kdb-q/][Matching Algorithms in q – An Interactive Presentation]]
 * Motivation
   - Intern-desk pairing
   - Two distinct populations
