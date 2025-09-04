@@ -18,10 +18,11 @@ Learning in Q][fun q], uses the expressive [q][] language to guide
 readers through implementing twelve machine learning algorithms from
 scratch. Nick is currently an [adjunct professor][] for the [Market
 Microstructure and Algorithmic Trading][mmat] class at [Carnegie
-Mellon University][]'s [MSCF][] program and a Managing Director in
-[Bank of America][]'s Equity Central Risk Book (CRB) desk.
+Mellon University][]'s [MSCF][] program and a Managing Director at
+[Bank of America][] where he leads the Market Data Science and
+Engineering team.
 
-[bank of america]: https://www.bankofamerica.com "Bank of America"
+[bank of america]: https://business.bofa.com "Bank of America"
 
 # New York
 After graduating [Duke University][] with a degree in Physics and
