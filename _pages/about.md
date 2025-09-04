@@ -138,12 +138,14 @@ Nick has been a panelist and guest on the [The Array Cast][] podcast.
 
 # In The News
 Nick has been mentioned in reference to the [Q][] programming language
-on [eFinancialCareers][].
+on [eFinancialCareers][] and [Hacker News][].
 
 - [The coding language that will get you the best jobs in banking](https://www.efinancialcareers.com/news/2020/09/best-coding-language-for-banking-jobs)
 - [Why so few people learn the hottest coding language in finance](https://www.efinancialcareers.com/news/2020/10/kdb-finance-jobs)
+- [Ask HN: Is KDB a sane choice for a datalake in 2024?](https://news.ycombinator.com/item?id=40625800)
 
-[efinancialcareers]: https://www.efinancialcareers.com "eFinancialCareers"
+[efinancialcareers]: https://www.efinancialcareers.com/news "eFinancialCareers"
+[hacker news]: https://news.ycombinator.com/news "Hacker News"
 
 # Emacs
 Nick uses Emacs in all parts of his life.  He is the author of
