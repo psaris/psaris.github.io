@@ -158,20 +158,20 @@ ability to inject code into both local [q][] processes and remote
 # Pediatric Cancer
 Nick is passionate about finding a cure for childhood cancer.  In
 addition to [supporting][jsbulls] [The D10][] [mission][d10 mission],
-he has raised over $150,000 for pediatric cancer research by [shaving
+he has raised over $190,000 for pediatric cancer research by [shaving
 bald][] at the annual [St. Baldrick's event in Hong Kong][] and has
-joined the ranks of [Knight of the Bald Table][]: [2015][], [2016][],
-[2018][], [2019][], [2020][], [2021][], [2022][] [2023][], and
-[2024][].
+joined the ranks of [Knight Commander][] with 10 years of service:
+[2015][], [2016][], [2018][], [2019][], [2020][], [2021][], [2022][],
+[2023][], [2024][], and [2025][].
 
 [jsbulls]: https://thed10.com/blog/j-s-bulls-why-we-do-this-in-the-first-place
     "Why J's Bulls Support Pediatric Cancer"
 [the d10]: https://thed10.com "The D10 Decathlon-Style Event"
 [d10 mission]: https://thed10.com/our-mission "The D10 Mission"
-[shaving bald]: https://www.stbaldricks.org/participants/nickgoesbald "Nick Goes Bald"
-[st. baldrick's event in hong kong]: https://www.stbaldricks.org/events/hkis2023
+[shaving bald]: https://www.stbaldricks.org/participants/nickgoesbald2025 "Nick Goes Bald"
+[st. baldrick's event in hong kong]: https://www.stbaldricks.org/events/hkis2025
     "St. Baldrick's Event in Hong Kong"
-[knight of the bald table]: https://www.stbaldricks.org/league
+[knight commander]: https://www.stbaldricks.org/league
     "St. Baldrick's League of Legendary Heroes"
 [2015]: https://www.stbaldricks.org/participants/nickgoesbald2015
 [2016]: https://www.stbaldricks.org/participants/nickgoesbald2016
@@ -181,6 +181,7 @@ joined the ranks of [Knight of the Bald Table][]: [2015][], [2016][],
 [2021]: https://www.stbaldricks.org/participants/nickgoesbald2021
 [2022]: https://www.stbaldricks.org/participants/nickgoesbald2022
 [2023]: https://www.stbaldricks.org/participants/nickgoesbald2023
-[2024]: https://www.stbaldricks.org/participants/nickgoesbald
+[2024]: https://www.stbaldricks.org/participants/nickgoesbald2024
+[2025]: https://www.stbaldricks.org/participants/nickgoesbald2025
 
 
