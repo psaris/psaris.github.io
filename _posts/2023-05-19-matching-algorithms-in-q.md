@@ -250,7 +250,7 @@ q)R:key[G]?value B                / gbie enumerations
 
 -   Enumerate the suitor and reviewer dictionaries
 -   Build all-null engagement vector
--   Iterator with [`.matching.sma`](#orgab47814) until convergence
+-   Iterator with [`.matching.sma`](#org723dd6c) until convergence
 -   Convert enumerations back to dictionaries
 
 ```q
@@ -337,7 +337,7 @@ q)show last rpS                   / 4 is dropped from cut reviewers
 
 ## Pruning Logistics
 
-[`.matching.prune`](#org3e420e7) handles lists of suitors and reviewers
+[`.matching.prune`](#org62e595c) handles lists of suitors and reviewers
 
 -   The [Stable Roommates (SR) Problem](#orgd25a486) requires the Suitor and
     Reviewer preferences to be the same data structure
@@ -425,9 +425,9 @@ J| 5 5
 ## Stable Roommates Algorithm
 
 -   Robert W. Irving published a 2-phase solution in 1985
--   Phase 1 passes the roommate preferences to the [Gale-Shapley](#orgf2ee21e)
+-   Phase 1 passes the roommate preferences to the [Gale-Shapley](#orgd639aa8)
     algorithm as both the suitor and reviewer
--   Since `q` does not allow passing by pointer, the [`.matching.sma`](#orgab47814)
+-   Since `q` does not allow passing by pointer, the [`.matching.sma`](#org723dd6c)
     function was conditioned on how many preference lists were passed
 -   Phase 2 removes 'cycles' which are rotations that produce equally
     stable solutions
@@ -452,8 +452,8 @@ sr:{[rn!rp]
 
 ## Stable Roommates Algorithm
 
--   Phase 1 applies the stable marriage ([Gale-Shapley](#orgf2ee21e)) algorithm
--   The results of phase 1 are then passed to [`.matching.decycle`](#org5b72de4) to
+-   Phase 1 applies the stable marriage ([Gale-Shapley](#orgd639aa8)) algorithm
+-   The results of phase 1 are then passed to [`.matching.decycle`](#org3194c05) to
     remove unstable cycles
 -   A final assignment vector is prepended to the intermediate 'decycle'
     states before being returned
@@ -511,9 +511,9 @@ q)show R:(1+til count R)!R:get each read0 `wmate.txt
 
 ## Stable Roommates Execution
 
--   The [`.matching.sr`](#orgce03611) function produces:
+-   The [`.matching.sr`](#org7a9afaf) function produces:
     -   the assignment dictionary
-    -   the results of the [Gale-Shapley](#orgf2ee21e) algorithm
+    -   the results of the [Gale-Shapley](#orgd639aa8) algorithm
     -   each step of the decycling process
 -   Notice how the assignment dictionary is symmetric. 1 is assigned
     6 and 6 is assigned 1
@@ -783,7 +783,7 @@ sasa:{[pc;uc;pu;(p;u;s;U;S)]
 
 ## Student-Allocation Supervisor-Optimal Implementation
 
--   The [`.matching.nextusp`](#org16aef98) function is used to find the next
+-   The [`.matching.nextusp`](#org6b6ab5e) function is used to find the next
     available supervisor, student and project to match
 -   Iterate until either a match is found, or no matches available
 -   Iteration passes the supervisor index and increments each time
@@ -1052,7 +1052,7 @@ q).y.k "\n" sv read0 `:hospitals.yml
 -   Vector implementations are faster than object-oriented ones
 -   The algorithms are heavily reliant on the `?` find operator
 -   The `q` `matching` library can be found on github:
-    <https://github.com/psaris/matching/releases/tag/kxcon23>
+    [https://github.com/psaris/matching/releases/tag/kxcon23](https://github.com/psaris/matching/releases/tag/kxcon23)
 -   This presentation can be found at [https://nick.psaris.com](https://nick.psaris.com)
 
 

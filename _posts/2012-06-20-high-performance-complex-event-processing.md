@@ -341,5 +341,5 @@ q)\ts do[1000;dupd r]
 
 <!----- Footnotes ----->
 
-[^fn1]: [nil](http://en.wikipedia.org/wiki/Complex_event_processing)
+[^fn1]: [http://en.wikipedia.org/wiki/Complex_event_processing](http://en.wikipedia.org/wiki/Complex_event_processing)
 [^fn2]: KDB+ 3.0 has redefined `lj` to remove filling: `lj:{.Q.ft[,\\:[;y]][x]}`
