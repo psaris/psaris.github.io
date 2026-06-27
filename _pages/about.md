@@ -165,7 +165,7 @@ he has raised over $190,000 for pediatric cancer research by [shaving
 bald][] at the annual [St. Baldrick's event in Hong Kong][] and has
 joined the ranks of [Knight Commander][] with 10 years of service:
 [2015][], [2016][], [2018][], [2019][], [2020][], [2021][], [2022][],
-[2023][], [2024][], and [2025][].
+[2023][], [2024][], [2025][], and [2026][].
 
 [jsbulls]: https://thed10.com/blog/j-s-bulls-why-we-do-this-in-the-first-place
     "Why J's Bulls Support Pediatric Cancer"
@@ -186,5 +186,4 @@ joined the ranks of [Knight Commander][] with 10 years of service:
 [2023]: https://www.stbaldricks.org/participants/nickgoesbald2023
 [2024]: https://www.stbaldricks.org/participants/nickgoesbald2024
 [2025]: https://www.stbaldricks.org/participants/nickgoesbald2025
-
-
+[2026]: https://www.stbaldricks.org/participants/nickgoesbald2026
