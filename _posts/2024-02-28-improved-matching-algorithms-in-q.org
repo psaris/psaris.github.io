@@ -12,23 +12,13 @@
 #+options: ':nil *:t -:t ::t <:t H:2 \n:nil ^:t arch:headline
 #+options: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
 #+options: email:t f:t inline:t num:nil p:nil pri:nil prop:nil
-#+options: stat:t tags:t tasks:t tex:t timestamp:nil title:t toc:1
+#+options: stat:t tags:t tasks:t tex:t timestamp:nil title:t toc:nil
 #+options: todo:t |:t
 #+options: html-postamble:nil
-#+options: reveal_center:nil
-#+options: reveal_single_file:nil
 #+language: en
 #+select_tags: export
 #+exclude_tags: noexport
 #+creator: Emacs 28.2.2 (Org mode 9.5.5)
-#+reveal_trans: default
-# #+reveal_trans: default/cube/page/concave/zoom/linear/fade/none
-#+reveal_margin: 0
-#+reveal_theme: league
-#+reveal_init_options: mouseWheel:true, progress:true, navigationMode: 'linear'
-#+reveal_extra_css: ./mystyle.css
-#+reveal_root: https://cdn.jsdelivr.net/npm/reveal.js
-#+reveal_hlevel: 1
 
 * Meetup Details
   [[https://go.marketing.kx.com/HK-Meetup-Feb-24][2024-02-28 Hong Kong Meetup]]

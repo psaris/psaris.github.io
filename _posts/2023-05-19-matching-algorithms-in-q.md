@@ -10,28 +10,11 @@ tags:
 - marriage
 ---
 
-# Table of Contents
-
--   [Recorded Presentation](#orgd232c17)
--   [Motivation](#org2ba8ebc)
--   [Demonstration](#org5ee8b82)
--   [Stable Marriage (SM) Problem](#org402eed7)
--   [Stable Roommates (SR) Problem](#orgd25a486)
--   [Hospital-Resident (HR) Problem](#org6b542b4)
--   [Student-Allocation (SA) Problem](#orgc40bbab)
--   [Performance](#org8f57cd3)
--   [Q Enhancements](#org1d67fa4)
--   [Summary](#org77008b7)
-
-
-<a id="orgd232c17"></a>
 
 # Recorded Presentation
 
 [Matching Algorithms in q – An Interactive Presentation](https://kx.com/resources/videos/matching-algorithms-in-kdb-q/)
 
-
-<a id="org2ba8ebc"></a>
 
 # Motivation
 
@@ -42,8 +25,6 @@ tags:
 -   Prevent back-room deals
 -   Is there a single optimal pairing?
 
-
-<a id="org5ee8b82"></a>
 
 # Demonstration
 
@@ -177,8 +158,6 @@ J| 9
 ```
 
 
-<a id="org402eed7"></a>
-
 # Stable Marriage (SM) Problem
 
 Given two distinct populations how do you create matches such that no
@@ -250,7 +229,7 @@ q)R:key[G]?value B                / gbie enumerations
 
 -   Enumerate the suitor and reviewer dictionaries
 -   Build all-null engagement vector
--   Iterator with [`.matching.sma`](#org723dd6c) until convergence
+-   Iterator with [`.matching.sma`](#org24ca6a1) until convergence
 -   Convert enumerations back to dictionaries
 
 ```q
@@ -270,7 +249,7 @@ sm:{[sn!sp;rn!rp]
 -   The first line of every algorithm unpacks its arguments
 -   The suitor and reviewer indices &#x2013; `Si` and `Ri` respectively &#x2013;
     are defined as variables so that the same function can be used
-    for the [Stable Roommates (SR) Problem](#orgd25a486)
+    for the [Stable Roommates (SR) Problem](#orgabcba3d)
 
 ```q
 / given (e)ngagement vector and (S)uitor and (R)eviewer preferences, find
@@ -337,14 +316,14 @@ q)show last rpS                   / 4 is dropped from cut reviewers
 
 ## Pruning Logistics
 
-[`.matching.prune`](#org62e595c) handles lists of suitors and reviewers
+[`.matching.prune`](#orga8c638b) handles lists of suitors and reviewers
 
--   The [Stable Roommates (SR) Problem](#orgd25a486) requires the Suitor and
+-   The [Stable Roommates (SR) Problem](#orgabcba3d) requires the Suitor and
     Reviewer preferences to be the same data structure
--   The [Hospital-Resident (HR) Problem](#org6b542b4) requires the function to prune
+-   The [Hospital-Resident (HR) Problem](#orgdd0697b) requires the function to prune
     the **worst** of multiple residents (acting as suitor) when the
     hospital reaches capacity
--   The [Student-Allocation (SA) Problem](#orgc40bbab) requires the function to
+-   The [Student-Allocation (SA) Problem](#org255fd97) requires the function to
     prune multiple students (acting as suitor) **and** the **worst** of
     multiple projects (acting as reviewer)
 
@@ -413,8 +392,6 @@ J| 5 5
 ```
 
 
-<a id="orgd25a486"></a>
-
 # Stable Roommates (SR) Problem
 
 -   What if we only had a single population?
@@ -425,9 +402,9 @@ J| 5 5
 ## Stable Roommates Algorithm
 
 -   Robert W. Irving published a 2-phase solution in 1985
--   Phase 1 passes the roommate preferences to the [Gale-Shapley](#orgd639aa8)
+-   Phase 1 passes the roommate preferences to the [Gale-Shapley](#orged0db3b)
     algorithm as both the suitor and reviewer
--   Since `q` does not allow passing by pointer, the [`.matching.sma`](#org723dd6c)
+-   Since `q` does not allow passing by pointer, the [`.matching.sma`](#org24ca6a1)
     function was conditioned on how many preference lists were passed
 -   Phase 2 removes 'cycles' which are rotations that produce equally
     stable solutions
@@ -452,8 +429,8 @@ sr:{[rn!rp]
 
 ## Stable Roommates Algorithm
 
--   Phase 1 applies the stable marriage ([Gale-Shapley](#orgd639aa8)) algorithm
--   The results of phase 1 are then passed to [`.matching.decycle`](#org3194c05) to
+-   Phase 1 applies the stable marriage ([Gale-Shapley](#orged0db3b)) algorithm
+-   The results of phase 1 are then passed to [`.matching.decycle`](#org32459ab) to
     remove unstable cycles
 -   A final assignment vector is prepended to the intermediate 'decycle'
     states before being returned
@@ -511,9 +488,9 @@ q)show R:(1+til count R)!R:get each read0 `wmate.txt
 
 ## Stable Roommates Execution
 
--   The [`.matching.sr`](#org7a9afaf) function produces:
+-   The [`.matching.sr`](#org3638bce) function produces:
     -   the assignment dictionary
-    -   the results of the [Gale-Shapley](#orgd639aa8) algorithm
+    -   the results of the [Gale-Shapley](#orged0db3b) algorithm
     -   each step of the decycling process
 -   Notice how the assignment dictionary is symmetric. 1 is assigned
     6 and 6 is assigned 1
@@ -535,8 +512,6 @@ q).matching.sr R
     2.  Search chain for 'tail' location so the non-repeating section
         can be excluded from the cycle
 
-
-<a id="org6b542b4"></a>
 
 # Hospital-Resident (HR) Problem
 
@@ -698,8 +673,6 @@ q)5#hrHR 1
 ```
 
 
-<a id="orgc40bbab"></a>
-
 # Student-Allocation (SA) Problem
 
 -   Let's relax the constraints once more and insert an intermediary
@@ -783,7 +756,7 @@ sasa:{[pc;uc;pu;(p;u;s;U;S)]
 
 ## Student-Allocation Supervisor-Optimal Implementation
 
--   The [`.matching.nextusp`](#org6b6ab5e) function is used to find the next
+-   The [`.matching.nextusp`](#org849173a) function is used to find the next
     available supervisor, student and project to match
 -   Iterate until either a match is found, or no matches available
 -   Iteration passes the supervisor index and increments each time
@@ -887,8 +860,6 @@ q)5#pusUS 2
 ```
 
 
-<a id="org8f57cd3"></a>
-
 # Performance
 
 > The key to performance is elegance, not battalions of special cases
@@ -948,8 +919,6 @@ q)5#pusUS 2
     0.5015301169999589
     ```
 
-
-<a id="org1d67fa4"></a>
 
 # Q Enhancements
 
@@ -1036,8 +1005,6 @@ q).y.k "\n" sv read0 `:hospitals.yml
          ^
     ```
 
-
-<a id="org77008b7"></a>
 
 # Summary
 

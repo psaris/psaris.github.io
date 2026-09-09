@@ -10,31 +10,11 @@ tags:
 - marriage
 ---
 
-# Table of Contents
-
--   [Meetup Details](#org86a1fe3)
--   [Motivation](#orgc485a03)
--   [Simple Example](#org1497364)
--   [Dictionary Literal Digression](#org9961621)
--   [Engagement Demonstration](#orgce7ade6)
--   [Roommate Demonstration](#orgdc6eb4e)
--   [Stable Marriage (SM) Problem](#orgf8b4338)
--   [Stable Roommates (SR) Problem](#orgcd8de1c)
--   [Hospital-Resident (HR) Problem](#org0b6af37)
--   [Student-Allocation (SA) Problem](#org85d2497)
--   [Performance](#org6953f58)
--   [Q Enhancements](#orgeaab9ef)
--   [Summary](#org9c3242d)
-
-
-<a id="org86a1fe3"></a>
 
 # Meetup Details
 
 [2024-02-28 Hong Kong Meetup](https://go.marketing.kx.com/HK-Meetup-Feb-24)
 
-
-<a id="orgc485a03"></a>
 
 # Motivation
 
@@ -45,8 +25,6 @@ tags:
 -   Prevent back-room deals
 -   Is there a single optimal pairing?
 
-
-<a id="org1497364"></a>
 
 # Simple Example
 
@@ -76,8 +54,6 @@ q)E~first .matching.sm[S;R]
 ```
 
 
-<a id="org9961621"></a>
-
 # Dictionary Literal Digression
 
 -   Intuitively extends the table and list syntax
@@ -102,8 +78,6 @@ q)E~first .matching.sm[S;R]
     k| v
     ```
 
-
-<a id="orgce7ade6"></a>
 
 # Engagement Demonstration
 
@@ -258,8 +232,6 @@ q)geSR[0],'geSR[0] = {[k!v]v!k} beSR 0
 ```
 
 
-<a id="orgdc6eb4e"></a>
-
 # Roommate Demonstration
 
 -   One set of index cards
@@ -310,8 +282,6 @@ I| ,"J"
 J| ,"I"
 ```
 
-
-<a id="orgf8b4338"></a>
 
 # Stable Marriage (SM) Problem
 
@@ -385,7 +355,7 @@ q)R:key[G]?value B                / gbie enumerations
 -   Use Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) to unpack dictionary parameters
 -   Enumerate the suitor and reviewer dictionaries
 -   Build all-null engagement vector
--   Iterate with [`.matching.sma`](#org63fbf09) until convergence
+-   Iterate with [`.matching.sma`](#org2570b86) until convergence
 -   Convert enumerations back to dictionaries
 
 ```q
@@ -405,8 +375,8 @@ sm:{[sn!sp;rn!rp]
     a pair of matrices
 -   The suitor and reviewer indices &#x2013; `Si` and `Ri` respectively &#x2013;
     are defined as variables so that the same function can be used
-    for the [Stable Roommates (SR) Problem](#orgcd8de1c)
--   Use Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) to unpack [`.matching.prune`](#org4155178) results
+    for the [Stable Roommates (SR) Problem](#orgb284931)
+-   Use Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) to unpack [`.matching.prune`](#org9637227) results
 
 ```q
 / given (e)ngagement vector and (S)uitor and (R)eviewer preferences, find
@@ -474,14 +444,14 @@ q)show first Srp                  / 4 is dropped from cut reviewers
 
 ## Pruning Logistics
 
-[`.matching.prune`](#org4155178) handles lists of suitors and reviewers
+[`.matching.prune`](#org9637227) handles lists of suitors and reviewers
 
--   The [Stable Roommates (SR) Problem](#orgcd8de1c) requires the Suitor and
+-   The [Stable Roommates (SR) Problem](#orgb284931) requires the Suitor and
     Reviewer preferences to be the same data structure
--   The [Hospital-Resident (HR) Problem](#org0b6af37) requires the function to prune
+-   The [Hospital-Resident (HR) Problem](#org740112d) requires the function to prune
     the **worst** of multiple residents (acting as suitor) when the
     hospital reaches capacity
--   The [Student-Allocation (SA) Problem](#org85d2497) requires the function to
+-   The [Student-Allocation (SA) Problem](#org4ab8fac) requires the function to
     prune multiple students (acting as suitor) **and** the **worst** of
     multiple projects (acting as reviewer)
 
@@ -551,8 +521,6 @@ J| 5 5
 ```
 
 
-<a id="orgcd8de1c"></a>
-
 # Stable Roommates (SR) Problem
 
 -   What if we only had a single population?
@@ -563,9 +531,9 @@ J| 5 5
 ## Stable Roommates Algorithm
 
 -   Robert W. Irving published a 2-phase solution in 1985
--   Phase 1 passes the roommate preferences to the [Gale-Shapley](#org1241dc1)
+-   Phase 1 passes the roommate preferences to the [Gale-Shapley](#orgeffda77)
     algorithm as both the suitor and reviewer
--   Since `q` does not allow passing by pointer, the [`.matching.sma`](#org63fbf09)
+-   Since `q` does not allow passing by pointer, the [`.matching.sma`](#org2570b86)
     function was conditioned on how many preference lists were passed
 -   Phase 2 removes 'cycles' which are rotations that produce equally
     stable solutions
@@ -592,10 +560,10 @@ sr:{[rn!rp]
 
 ## Stable Roommates Algorithm
 
--   Phase 1 applies the stable marriage ([Gale-Shapley](#org1241dc1)) algorithm
+-   Phase 1 applies the stable marriage ([Gale-Shapley](#orgeffda77)) algorithm
 -   Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) is used to unpack the list and throw
     away the first element
--   The results of phase 1 are then passed to [`.matching.decycle`](#org3a2e9dd) to
+-   The results of phase 1 are then passed to [`.matching.decycle`](#org146718f) to
     remove unstable cycles
 -   A final assignment vector is prepended to the intermediate 'decycle'
     states before being returned
@@ -653,9 +621,9 @@ q)show R:(1+til count R)!R:get each read0 `wmate.txt
 
 ## Stable Roommates Execution
 
--   The [`.matching.sr`](#orgf1ad142) function produces:
+-   The [`.matching.sr`](#org8c8a77d) function produces:
     -   the assignment dictionary
-    -   the results of the [Gale-Shapley](#org1241dc1) algorithm
+    -   the results of the [Gale-Shapley](#orgeffda77) algorithm
     -   each step of the decycling process
 -   Notice how the assignment dictionary is symmetric &#x2013; 1 is
     assigned 6 and 6 is assigned 1
@@ -677,8 +645,6 @@ q).matching.sr R
     2.  Search chain for 'tail' location so the non-repeating section
         can be excluded from the cycle
 
-
-<a id="org0b6af37"></a>
 
 # Hospital-Resident (HR) Problem
 
@@ -749,7 +715,7 @@ hrh:hrw[hrha]                  / hospital resident (hospital-optimal)
 
 -   Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) is used to unpack the list of
     parameters used in the iteration as well as to assign the results
-    of [`.matching.prune`](#org4155178)
+    of [`.matching.prune`](#org9637227)
 -   To find next available resident we limit our search to unmatched
     residents with viable preferences
 -   The `?` find operator is used again to find the first such
@@ -779,7 +745,7 @@ hrra:{[c;(h;r;H;R)]
 
 -   Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) is used to unpack the list of
     parameters used in the iteration as well as to assign the results
-    of [`.matching.prune`](#org4155178)
+    of [`.matching.prune`](#org9637227)
 -   To find the next available hospital we ignore hospitals at
     capacity, then drop existing matches from hospital preferences
 -   The `?` find operator is used again to find the first such
@@ -845,8 +811,6 @@ q)5#hrHR 1
 ```
 
 
-<a id="org85d2497"></a>
-
 # Student-Allocation (SA) Problem
 
 -   Let's relax the constraints once more and insert an intermediary
@@ -900,7 +864,7 @@ sau:saw[saua]                   / student-allocation (supervisor-optimal)
 
 -   Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) is used to unpack the list of
     parameters used in the iteration as well as to assign the last
-    result of [`.matching.prune`](#org4155178)
+    result of [`.matching.prune`](#org9637227)
 -   Limit search to unmatched students with viable preferences
 -   The `?` find operator is used again to find the first such
     student
@@ -936,8 +900,8 @@ sasa:{[pc;uc;pu;(p;u;s;U;S)]
 
 -   Kdb+ 4.1 [pattern matching](https://code.kx.com/q//releases/ChangesIn4.1/#pattern-matching) is used to unpack the list of
     parameters used in the iteration as well as to assign the last
-    result of [`.matching.prune`](#org4155178)
--   The [`.matching.nextusp`](#org8f879aa) function is used to find the next
+    result of [`.matching.prune`](#org9637227)
+-   The [`.matching.nextusp`](#org7ce04bc) function is used to find the next
     available supervisor, student and project to match
 -   Iterate until either a match is found or no matches are available
 -   Iteration passes the supervisor index and increments each time
@@ -1040,8 +1004,6 @@ q)5#pusUS 2
 ```
 
 
-<a id="org6953f58"></a>
-
 # Performance
 
 > The key to performance is elegance, not battalions of special cases
@@ -1107,8 +1069,6 @@ q)5#pusUS 2
     ```
 
 
-<a id="orgeaab9ef"></a>
-
 # Q Enhancements
 
 > Nothing happens unless first we dream  &#x2013; Carl Sandburg
@@ -1173,8 +1133,6 @@ q)(1b):{[a:1;b:2]} ~ {[a:1;b:1]}
 q).y.k "\n" sv read0 `:hospitals.yml
 ```
 
-
-<a id="org9c3242d"></a>
 
 # Summary
 
